@@ -1,0 +1,2 @@
+cd C:\DMS_Programs\DMS5\MultiProgRunnerSvc\
+C:\WINDOWS\Microsoft.NET\Framework\v1.1.4322\installutil ProgRunnerSvc.exe
