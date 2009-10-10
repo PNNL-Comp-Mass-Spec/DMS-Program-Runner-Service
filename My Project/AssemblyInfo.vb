@@ -1,3 +1,4 @@
+﻿Imports System
 Imports System.Reflection
 Imports System.Runtime.InteropServices
 
@@ -7,16 +8,17 @@ Imports System.Runtime.InteropServices
 
 ' Review the values of the assembly attributes
 
-<Assembly: AssemblyTitle("Program Runner Service")> 
-<Assembly: AssemblyDescription("Run an arbitrary set of programs as a service")> 
-<Assembly: AssemblyCompany("Pacific Northwest National Laboratory")> 
-<Assembly: AssemblyProduct("Program Runner Service")> 
-<Assembly: AssemblyCopyright("")> 
+<Assembly: AssemblyTitle("ProgRunnerTest")> 
+<Assembly: AssemblyDescription("")> 
+<Assembly: AssemblyCompany("Battelle PNNL")> 
+<Assembly: AssemblyProduct("ProgRunnerTest")> 
+<Assembly: AssemblyCopyright("Copyright © Battelle PNNL 2009")> 
 <Assembly: AssemblyTrademark("")> 
-<Assembly: CLSCompliant(True)> 
+
+<Assembly: ComVisible(False)>
 
 'The following GUID is for the ID of the typelib if this project is exposed to COM
-<Assembly: Guid("E1B5D3EE-2D4D-4F68-B37D-A053F36120F3")> 
+<Assembly: Guid("96957fd3-151e-4faa-9744-b3c66efb73d0")> 
 
 ' Version information for an assembly consists of the following four values:
 '
@@ -27,5 +29,7 @@ Imports System.Runtime.InteropServices
 '
 ' You can specify all the values or you can default the Build and Revision Numbers 
 ' by using the '*' as shown below:
+' <Assembly: AssemblyVersion("1.0.*")> 
 
-<Assembly: AssemblyVersion("1.1.*")> 
+<Assembly: AssemblyVersion("1.0.0.0")> 
+<Assembly: AssemblyFileVersion("1.0.0.0")> 

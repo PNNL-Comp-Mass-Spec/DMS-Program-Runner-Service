@@ -1,2 +1,11 @@
+If you need to uninstall the old version of the ProgRunner, use either of these commands:
+
+C:\WINDOWS\Microsoft.NET\Framework\v1.1.4322\installutil /u ProgRunnerSvc.exe
+ or
+C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\installutil /u ProgRunnerSvc.exe
+
+You can now install the new service:
 cd C:\DMS_Programs\DMS5\MultiProgRunnerSvc\
-C:\WINDOWS\Microsoft.NET\Framework\v1.1.4322\installutil ProgRunnerSvc.exe
+C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\installutil ProgRunnerSvc.exe
+
+

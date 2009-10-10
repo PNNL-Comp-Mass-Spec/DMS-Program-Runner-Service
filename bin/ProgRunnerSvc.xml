@@ -1,0 +1,172 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+ProgRunnerSvc
+</name>
+</assembly>
+<members>
+<member name="P:ProgRunnerSvc.clsLogTools.FileLogDebugEnabled">
+	<summary>
+ Tells calling program file debug status
+ </summary>
+	<returns>TRUE if debug level enabled for file logger; FALSE otherwise</returns>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsLogTools.WriteLog(ProgRunnerSvc.clsLogTools.LoggerTypes,ProgRunnerSvc.clsLogTools.LogLevels,System.String)">
+	<summary>
+ Writes a message to the logging system
+ </summary>
+	<param name="LoggerType">Type of logger to use</param>
+	<param name="LogLevel">Level of log reporting</param>
+	<param name="InpMsg">Message to be logged</param>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsLogTools.WriteLog(ProgRunnerSvc.clsLogTools.LoggerTypes,ProgRunnerSvc.clsLogTools.LogLevels,System.String,System.Exception)">
+	<summary>
+ Overload to write a message and exception to the logging system
+ </summary>
+	<param name="LoggerType">Type of logger to use</param>
+	<param name="LogLevel">Level of log reporting</param>
+	<param name="InpMsg">Message to be logged</param>
+	<param name="Ex">Exception to be logged</param>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsLogTools.ChangeLogFileName(System.String)">
+	<summary>
+ Changes the base log file name
+ </summary>
+	<param name="FileName">Log file base name and path (relative to program folder)</param>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsLogTools.FindAppenders(System.String)">
+	<summary>
+ Gets the specified appender
+ </summary>
+	<param name="AppendName">Name of appender to find</param>
+	<returns>List(IAppender) objects if found; NOTHING otherwise</returns>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsLogTools.SetFileLogLevel(System.Int32)">
+	<summary>
+ Sets the file logging level via an integer value (Overloaded)
+ </summary>
+	<param name="InpLevel">Integer corresponding to level (1-5, 5 being most verbose</param>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsLogTools.SetFileLogLevel(ProgRunnerSvc.clsLogTools.LogLevels)">
+	<summary>
+ Sets file logging level based on enumeration (Overloaded)
+ </summary>
+	<param name="InpLevel">LogLevels value defining level (Debug is most verbose)</param>
+	<remarks></remarks>
+</member><member name="T:ProgRunnerSvc.CProcessRunner.EThreadState">
+	<summary> 
+ Thread states. 
+ </summary>
+</member><member name="F:ProgRunnerSvc.CProcessRunner.m_state">
+	<summary>
+ overall state of this object
+ </summary>
+</member><member name="F:ProgRunnerSvc.CProcessRunner.m_Process">
+	<summary>
+ Used to start and monitor the external program. 
+ </summary>
+	<remarks></remarks>
+</member><member name="F:ProgRunnerSvc.CProcessRunner.m_pid">
+	<summary> 
+ The process id of the currently running incarnation of the external program. 
+ </summary>
+</member><member name="F:ProgRunnerSvc.CProcessRunner.m_Thread">
+	<summary>
+ The internal thread used to run the monitoring code. That starts and monitors the external program. 
+ </summary>
+</member><member name="F:ProgRunnerSvc.CProcessRunner.m_ThreadStopCommand">
+	<summary>
+ Flag that tells internal thread to quit monitoring external program and exit. 
+ </summary>
+</member><member name="F:ProgRunnerSvc.CProcessRunner.m_monitorInterval">
+	<summary>
+ The interval for monitoring thread to wake up and check m_doCleanup.
+ </summary>
+</member><member name="F:ProgRunnerSvc.CProcessRunner.m_ExitCode">
+	<summary>
+ Exit code returned by completed process.
+ </summary>
+</member><member name="F:ProgRunnerSvc.CProcessRunner.m_StrKeyName">
+	<summary>
+ Parameters for external program. 
+ </summary>
+</member><member name="P:ProgRunnerSvc.CProcessRunner.MonitoringInterval">
+	<summary> 
+ How often (milliseconds) internal monitoring thread checks status of external program.
+ </summary>
+</member><member name="P:ProgRunnerSvc.CProcessRunner.PID">
+	<summary> 
+ Process id of currently running external program's process. 
+ </summary>
+</member><member name="P:ProgRunnerSvc.CProcessRunner.State">
+	<summary> 
+ Current state of prog runner (as number). 
+ </summary>
+</member><member name="P:ProgRunnerSvc.CProcessRunner.Repeat">
+	<summary> 
+ Whether prog runner will restart external program after it exits. 
+ </summary>
+</member><member name="P:ProgRunnerSvc.CProcessRunner.RepeatHoldOffTime">
+	<summary> 
+ Time (seconds) that prog runner waits to restart external program after it exits. 
+ </summary>
+</member><member name="P:ProgRunnerSvc.CProcessRunner.Name">
+	<summary> 
+ Name of this progrunner.
+  </summary>
+</member><member name="P:ProgRunnerSvc.CProcessRunner.ExitCode">
+	<summary> 
+ Exit code when process completes. 
+ </summary>
+</member><member name="P:ProgRunnerSvc.CProcessRunner.WorkDir">
+	<summary> 
+ Working directory for process execution. 
+ </summary>
+</member><member name="P:ProgRunnerSvc.CProcessRunner.CreateNoWindow">
+	<summary> 
+ Determine if window should be displayed. 
+ </summary>
+</member><member name="P:ProgRunnerSvc.CProcessRunner.WindowStyle">
+	<summary> 
+ Window style to use when CreateNoWindow is False. 
+ </summary>
+</member><member name="M:ProgRunnerSvc.CProcessRunner.#ctor">
+	<summary> 
+ Initializes a new instance of the clsProgRunner class. 
+ </summary>
+</member><member name="M:ProgRunnerSvc.CProcessRunner.#ctor(System.String,System.String,System.String,System.String,System.String)">
+	<summary>
+ Instantiate new prog runner instance
+ </summary>
+	<param name="StrProcessRunnerName">Process runner name</param>
+	<param name="StrProgramName">Program name</param>
+	<param name="StrProgramArguments">Program arguments</param>
+	<param name="StrRepeat">Repeat mode.  Can be Repeat, Once, or No</param>
+	<param name="StrHoldoff">Holdoff time (in seconds) between when program exits to when it restarts if the Repeat mode is Repeat</param>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.CProcessRunner.vFUpdateProcessParameters(System.String,System.String,System.String,System.String)">
+	<summary> 
+ Update settings for existing prog runner instance
+ </summary>
+	<param name="StrProgramName">Program name</param>
+	<param name="StrProgramArguments">Program arguments</param>
+	<param name="StrRepeat">Repeat mode.  Can be Repeat, Once, or No</param>
+	<param name="StrHoldoff">Holdoff time (in seconds) between when program exits to when it restarts if the Repeat mode is Repeat</param>
+</member><member name="M:ProgRunnerSvc.CProcessRunner.vFStartThread">
+	<summary> 
+ Creates a new thread and starts code that runs and monitors a program in it. 
+ </summary>
+</member><member name="M:ProgRunnerSvc.CProcessRunner.vFStopThread">
+	<summary> 
+ Causes monitoring thread to exit on its next monitoring cycle. 
+ </summary>
+</member><member name="M:ProgRunnerSvc.CProcessRunner.vFProcessThread">
+	<summary> 
+ Start program as external process and monitor its state. 
+ </summary>
+</member><member name="T:ProgRunnerSvc.CProcessRunner">
+	<summary> This class runs a single program as an external process and monitors it with an internal thread. </summary>
+</member>
+</members>
+</doc>

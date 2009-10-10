@@ -62,12 +62,12 @@ Public Class ProgRunner
 
 	Protected Overrides Sub OnStart(ByVal args() As String)
 		'Start the service running
-		MyProgRunner.StartAllProgRunners(True)
+        MyProgRunner.StartAllProgRunners()
 	End Sub
 
 	Protected Overrides Sub OnStop()
 		'Stop the service
-		MyProgRunner.StopAllProgRunners(True)
+        MyProgRunner.StopAllProgRunners()
 		MyProgRunner = Nothing
 	End Sub
 

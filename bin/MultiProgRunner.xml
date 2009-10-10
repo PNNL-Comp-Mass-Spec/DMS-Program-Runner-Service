@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-	<section>
-	 <section name="logging">
-			<item key="logfilename" value="C:\VS_Net Projects\DMS Projects\DaveClark\Andrei_ProgRunner_Svc_Net\bin\ProgRunner" />
-	 </section>
-	 <section name="programs">
-	    <item key="Andrei" value="Notepad.exe" arguments="" run="No" holdoff="0" />
-	    <item key="Robert" value="Notepad.exe" arguments="C:\VS_Net Projects\DMS Projects\DaveClark\Andrei_ProgRunner_Svc_Net\junk1.txt" run="Repeat" holdoff="25" />
-	    <item key="Samuel" value="Notepad.exe" arguments="C:\VS_Net Projects\DMS Projects\DaveClark\Andrei_ProgRunner_Svc_Net\junk2.txt" run="Repeat" holdoff="23" />
-	 </section>
+<section>
+	<section name="programs">
+		<item key="Andrei" value="C:\temp\calc.exe" arguments="" run="Once" holdoff="5" />
+		<item key="Robert" value="c:\temp\Notepad.exe" arguments="c:\temp\Test.txt" run="Once" holdoff="5" /> 
+  		<item key="Samuel" value="c:\temp\WinMine.exe" arguments="" run="Repeat" holdoff="10" /> 
 	</section>
+</section>
 
 
