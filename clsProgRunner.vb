@@ -51,7 +51,7 @@ Public Class CProcessRunner
     ''' <summary>
     ''' The interval for monitoring thread to wake up and check m_doCleanup.
     ''' </summary>
-    Private m_monitorInterval As Integer = 5000 ' (miliseconds)
+    Private m_monitorInterval As Integer = 1000 ' (miliseconds)
 
     ''' <summary>
     ''' Exit code returned by completed process.
@@ -360,11 +360,23 @@ Public Class CProcessRunner
                         m_Process.WaitForExit(m_monitorInterval)
                     End While
 
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Stopped: " & m_StrKeyName)
                     If m_ThreadStopCommand = True Then
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Stopped: " & m_StrKeyName)
                         Exit Do
+                    Else
+                        If m_StrRepeat = "Repeat" Then
+                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Waiting: " & m_StrKeyName)
+                        Else
+                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Stopped: " & m_StrKeyName)
+                        End If
                     End If
+                Catch ex As Exception
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error running process '" & m_StrKeyName & "': " & ex.Message)
+                    m_state = EThreadState.ProcessBroken
+                    Exit Sub
+                End Try
 
+                Try
                     m_pid = 0
                     m_ExitCode = m_Process.ExitCode
                     m_Process.Close()
@@ -398,7 +410,10 @@ Public Class CProcessRunner
                         System.Threading.Thread.Sleep(m_monitorInterval)
                     End If
                 Catch ex As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to start process: " & m_StrKeyName)
+                    ' Do not write a log entry if the message is "Thread was being aborted"
+                    If Not ex.Message.StartsWith("Thread was being aborted") Then
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error waiting to restart process '" & m_StrKeyName & "': " & ex.Message)
+                    End If
                     m_state = EThreadState.ProcessBroken
                     Exit Sub
                 End Try

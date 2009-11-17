@@ -1,0 +1,11 @@
+Program Runner (MultiProgRunner) Revision History
+
+Version 1.1.3574; October 14, 2009
+	- Improved robustness when reading a changed .XML settings file
+
+Version 1.1.3569; October 9, 2009
+	- Updated to Visual Studio 2008.
+	- Updated to more accurately update holdoff times when the user changes them in the .Xml file
+
+Version 1.0.1839; June 29, 2006
+	- Stable Visual Studio 2003 release

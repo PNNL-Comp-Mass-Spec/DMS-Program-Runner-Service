@@ -54,6 +54,15 @@ ProgRunnerSvc
  </summary>
 	<param name="InpLevel">LogLevels value defining level (Debug is most verbose)</param>
 	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsMainProg.StrFGetProcesses(System.String)">
+	<summary>
+ If the XML reader tries to read a file that is being updated, an error can occur
+ This function only has Try/Catch blocks when reading specific entries within a section
+ The calling function is expected to catch and handle other errors
+ </summary>
+	<param name="strIniFilePath"></param>
+	<returns></returns>
+	<remarks></remarks>
 </member><member name="T:ProgRunnerSvc.CProcessRunner.EThreadState">
 	<summary> 
  Thread states. 
