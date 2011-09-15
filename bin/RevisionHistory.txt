@@ -1,5 +1,9 @@
 Program Runner (MultiProgRunner) Revision History
 
+Version 1.2.4275; September 15, 2011
+	- Switched from .Now to .UtcNow
+	- Updated to Visual Studio 2010
+
 Version 1.1.3574; October 14, 2009
 	- Improved robustness when reading a changed .XML settings file
 

@@ -1,5 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ProgRunnerSvc", "ProgRunnerSvc.vbproj", "{ED9F7AF2-2284-45EB-BBE8-4C1863A730DB}"
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ProgRunnerTest", "ProgRunnerTest\ProgRunnerTest.vbproj", "{B061504B-3CB2-4A1D-A9A4-01DE0F3D1E3F}"
