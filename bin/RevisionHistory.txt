@@ -1,5 +1,8 @@
 Program Runner (MultiProgRunner) Revision History
 
+Version 1.2.5017; September 26, 2013
+	- Updated to .NET 4
+
 Version 1.2.4275; September 15, 2011
 	- Switched from .Now to .UtcNow
 	- Updated to Visual Studio 2010
