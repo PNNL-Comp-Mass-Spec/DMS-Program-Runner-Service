@@ -8,14 +8,14 @@ psservice \\proto-10 stop progrunner
 psservice \\proto-11 stop progrunner
 pause
 
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-3\DMS_Programs\MultiProgRunnerSvc_NET\ProgRunnerSvc.exe /Y
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-4\DMS_Programs\MultiProgRunnerSvc_NET\ProgRunnerSvc.exe /Y
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-5\DMS_Programs\MultiProgRunnerSvc_NET\ProgRunnerSvc.exe /Y
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-7\DMS_Programs\MultiProgRunnerSvc_NET\ProgRunnerSvc.exe /Y
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-8\DMS_Programs\MultiProgRunnerSvc_NET\ProgRunnerSvc.exe /Y
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-9\DMS_Programs\MultiProgRunnerSvc_NET\ProgRunnerSvc.exe /Y
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-10\DMS_Programs\MultiProgRunnerSvc_NET\ProgRunnerSvc.exe /Y
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-11\DMS_Programs\MultiProgRunnerSvc_NET\ProgRunnerSvc.exe /Y
+xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-3\DMS_Programs\MultiProgRunnerSvc\ProgRunnerSvc.exe /Y
+xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-4\DMS_Programs\MultiProgRunnerSvc\ProgRunnerSvc.exe /Y
+xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-5\DMS_Programs\MultiProgRunnerSvc\ProgRunnerSvc.exe /Y
+xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-7\DMS_Programs\MultiProgRunnerSvc\ProgRunnerSvc.exe /Y
+xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-8\DMS_Programs\MultiProgRunnerSvc\ProgRunnerSvc.exe /Y
+xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-9\DMS_Programs\MultiProgRunnerSvc\ProgRunnerSvc.exe /Y
+xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-10\DMS_Programs\MultiProgRunnerSvc\ProgRunnerSvc.exe /Y
+xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-11\DMS_Programs\MultiProgRunnerSvc\ProgRunnerSvc.exe /Y
 pause
 
 psservice \\proto-3 start progrunner
