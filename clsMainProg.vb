@@ -3,239 +3,289 @@ Imports System.Threading
 Imports System.Windows.Forms
 Imports System.Collections.Generic
 Imports System.Xml
-Imports System.Security
 Imports System
 
 Public Class clsMainProg
 	Private Const SETTINGS_FILE_UPDATE_DELAY_MSEC As Integer = 1500
 
 	Private Const m_IniFileName As String = "MultiProgRunner.xml"
-	Private m_IniFileNamePath As String = String.Empty
+    Private ReadOnly m_IniFileNamePath As String = String.Empty
 
 	Private WithEvents m_FileWatcher As New FileSystemWatcher()
 
-	Private m_DProgRunners As New Dictionary(Of String, CProcessRunner)
+    ''' <summary>
+    ''' Keys are the program name; values are the ProcessRunner object
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private ReadOnly m_ProgRunners As New Dictionary(Of String, clsProcessRunner)
 
-	' When the .XML settings file is changed, mUpdateSettingsFromFile is set to True and mUpdateSettingsRequestTime is set to the current date/time
-	' Timer looks for mSettingsFileUpdateTimer being true, and after 1500 milliseconds has elapsed, it calls UpdateSettingsFromFile
-	Private mUpdateSettingsFromFile As Boolean
-	Private mUpdateSettingsRequestTime As DateTime
-	Private WithEvents mSettingsFileUpdateTimer As System.Timers.Timer
+    ' When the .XML settings file is changed, mUpdateSettingsFromFile is set to True and mUpdateSettingsRequestTime is set to the current date/time
+    ' Timer looks for mSettingsFileUpdateTimer being true, and after 1500 milliseconds has elapsed, it calls UpdateSettingsFromFile
+    Private mUpdateSettingsFromFile As Boolean
+    Private mUpdateSettingsRequestTime As DateTime
+    Private WithEvents mSettingsFileUpdateTimer As Timers.Timer
 
-	Public Sub New()
-		Dim fi As New FileInfo(Application.ExecutablePath)
-		m_IniFileNamePath = Path.Combine(fi.DirectoryName, m_IniFileName)
-		Try
-			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "MultiProgRunner v" & Application.ProductVersion & " started")
-			'Set up the FileWatcher to detect setup file changes
-			With m_FileWatcher
-				.BeginInit()
-				.Path = fi.DirectoryName
-				.IncludeSubdirectories = False
-				.Filter = m_IniFileName
-				.NotifyFilter = NotifyFilters.LastWrite
-				.EndInit()
-				.EnableRaisingEvents = True
-			End With
-			AddHandler m_FileWatcher.Changed, AddressOf m_FileWatcher_Changed
+    Public Sub New()
+        Dim fi As New FileInfo(Application.ExecutablePath)
+        m_IniFileNamePath = Path.Combine(fi.DirectoryName, m_IniFileName)
+        Try
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "MultiProgRunner v" & Application.ProductVersion & " started")
+            'Set up the FileWatcher to detect setup file changes
+            With m_FileWatcher
+                .BeginInit()
+                .Path = fi.DirectoryName
+                .IncludeSubdirectories = False
+                .Filter = m_IniFileName
+                .NotifyFilter = NotifyFilters.LastWrite
+                .EndInit()
+                .EnableRaisingEvents = True
+            End With
+            AddHandler m_FileWatcher.Changed, AddressOf m_FileWatcher_Changed
 
-			m_DProgRunners.Clear()
+            m_ProgRunners.Clear()
 
-			mSettingsFileUpdateTimer = New System.Timers.Timer(250)
-			mSettingsFileUpdateTimer.Start()
+            mUpdateSettingsRequestTime = System.DateTime.UtcNow
+            mSettingsFileUpdateTimer = New Timers.Timer(250)
+            mSettingsFileUpdateTimer.Start()
 
-		Catch ex As Exception
-			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to initialize clsMainProg")
-		End Try
-	End Sub
+        Catch ex As Exception
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to initialize clsMainProg")
+        End Try
+    End Sub
 
-	Public Sub StartAllProgRunners()
-		UpdateProgRunnersFromFile(False)
-	End Sub
+    Public Sub StartAllProgRunners()
+        UpdateProgRunnersFromFile(False)
+    End Sub
 
-	Private Sub UpdateProgRunnersFromFile(ByVal blnPassXMLFileParsingExceptionsToCaller As Boolean)
-		Dim ACProcessSettings As CProcessSettings()
+    Private Sub UpdateProgRunnersFromFile(ByVal blnPassXMLFileParsingExceptionsToCaller As Boolean)
 
-		Try
-			If m_IniFileNamePath = Nothing OrElse m_IniFileNamePath.Length = 0 Then Exit Sub
+        Dim lstProgramSettings As List(Of clsProcessSettings)
 
-			ACProcessSettings = StrFGetProcesses(m_IniFileNamePath)
-		Catch ex As Exception
-			If blnPassXMLFileParsingExceptionsToCaller Then
-				Throw ex
-			Else
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error reading parameter file '" & m_IniFileNamePath & "': " & ex.Message)
-			End If
-			Exit Sub
-		End Try
+        Try
+            If String.IsNullOrWhiteSpace(m_IniFileNamePath) Then Exit Sub
 
-		clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Updating from file")
-		'Mark for possible removing
-		For Each oCKeyValuePair As KeyValuePair(Of String, CProcessRunner) In m_DProgRunners
-			oCKeyValuePair.Value.bIsUpdatedFromFile = False
-		Next
+            lstProgramSettings = GetProcesses(m_IniFileNamePath)
 
-		For Each oCProcessSettings As CProcessSettings In ACProcessSettings
-			Dim StrKey As String = oCProcessSettings.StrKey
-			Try
-				If Not m_DProgRunners.ContainsKey(StrKey) Then
-					Dim oCProcessRunner As CProcessRunner = New CProcessRunner(StrKey, oCProcessSettings.StrProgram, _
-							oCProcessSettings.StrArguments, oCProcessSettings.StrRepeat, oCProcessSettings.StrHoldOff)
-					oCProcessRunner.bIsUpdatedFromFile = True
-					m_DProgRunners.Add(StrKey, oCProcessRunner)
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Added program '" & StrKey & "'")
-				Else
-					Dim oCProcessRunner As CProcessRunner = m_DProgRunners.Item(StrKey)
-					oCProcessRunner.vFUpdateProcessParameters(oCProcessSettings.StrProgram, oCProcessSettings.StrArguments, _
-							oCProcessSettings.StrRepeat, oCProcessSettings.StrHoldOff)
-					oCProcessRunner.bIsUpdatedFromFile = True
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Updated program '" & StrKey & "'")
-				End If
-			Catch ex As Exception
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error in UpdateProgRunnersFromFile updating process '" & StrKey & "': " & ex.Message)
-			End Try
-		Next
+        Catch ex As Exception
+            If blnPassXMLFileParsingExceptionsToCaller Then
+                Throw
+            Else
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error reading parameter file '" & m_IniFileNamePath & "': " & ex.Message)
+            End If
+            Exit Sub
+        End Try
 
-		Try
-			'Remove disappeared processes
-			Dim oLKeysForRemoving As New List(Of String)
-			For Each oCKeyValuePair As KeyValuePair(Of String, CProcessRunner) In m_DProgRunners
-				If oCKeyValuePair.Value.bIsUpdatedFromFile = False Then
-					oLKeysForRemoving.Add(oCKeyValuePair.Key)
-				End If
-			Next
-			For Each StrKey As String In oLKeysForRemoving
-				m_DProgRunners.Item(StrKey).vFStopThread()
-				m_DProgRunners.Remove(StrKey)
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Deleted program '" & StrKey & "'")
-			Next
-		Catch ex As Exception
-			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error in UpdateProgRunnersFromFile removing old processes: " & ex.Message)
-		End Try
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Updating from file")
 
-	End Sub
+        ' Make a list of the currently running progrunners
+        ' Keys are the UniqueKey for each progrunner, value is initially False but is set to true for each manager processed
+        Dim lstProgRunners = New Dictionary(Of String, Boolean)
+        For Each uniqueProgramKey As String In m_ProgRunners.Keys
+            lstProgRunners.Add(uniqueProgramKey, False)
+        Next
 
-	Public Sub StopAllProgRunners()
-		For Each oCKeyValuePair As KeyValuePair(Of String, CProcessRunner) In m_DProgRunners
-			m_DProgRunners.Item(oCKeyValuePair.Key).vFStopThread()
-		Next
-		m_DProgRunners.Clear()
-		clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "MultiProgRunner stopped")
-	End Sub
-	Protected Overrides Sub Finalize()
-		Try
-			StopAllProgRunners()
-		Catch ex As Exception
-			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to StopAllProgRunners")
-		Finally
-			MyBase.Finalize()
-		End Try
-	End Sub
+        Dim threadsProcessed = 0
+        Dim oRandom = New Random()
 
-	Private Sub m_FileWatcher_Changed(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles m_FileWatcher.Changed
-		mUpdateSettingsFromFile = True
-		mUpdateSettingsRequestTime = System.DateTime.UtcNow
-	End Sub
+        For Each oProcessSettings As clsProcessSettings In lstProgramSettings
 
-	Private Sub UpdateSettingsFromFile()
-		Const MAX_READ_ATTEMPTS As Integer = 3
+            threadsProcessed += 1
 
-		For iTime As Integer = 1 To MAX_READ_ATTEMPTS
-			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "File changed")
+            Dim uniqueProgramKey = oProcessSettings.UniqueKey
+            If String.IsNullOrWhiteSpace(uniqueProgramKey) Then
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Ignoring empty program key in the Programs section")
+                Continue For
+            End If
 
-			'When file was written program gets few events.
-			'During some events XML reader can't open file. So use try-catch
-			Try
-				UpdateProgRunnersFromFile(True)
-				Exit For
-			Catch ex As Exception
-				If iTime < MAX_READ_ATTEMPTS Then
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error reading XML file (will try again): " & ex.Message)
-				Else
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error reading XML file (tried " & MAX_READ_ATTEMPTS.ToString & " times): " & ex.Message)
-				End If
-			End Try
+            Try
+                If Not m_ProgRunners.ContainsKey(uniqueProgramKey) Then
+                    ' New entry
+                    Dim oCProcessRunner As clsProcessRunner = New clsProcessRunner(oProcessSettings)
+                    lstProgRunners.Add(uniqueProgramKey, True)
 
-			Thread.Sleep(1000)
-		Next
-	End Sub
+                    m_ProgRunners.Add(uniqueProgramKey, oCProcessRunner)
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Added program '" & uniqueProgramKey & "'")
 
-	Public Class CProcessSettings
-		Public StrKey As String
-		Public StrProgram As String
-		Public StrArguments As String
-		Public StrRepeat As String
-		Public StrHoldOff As String
-	End Class
+                    If threadsProcessed < lstProgramSettings.Count Then
+                        ' Delay between 1 and 2 seconds before continuing
+                        ' We do this so that the ProgRunner doesn't start a bunch of processes all at once
+                        Dim delayTimeMsec = oRandom.Next(1000, 2000)
+                        Thread.Sleep(delayTimeMsec)
+                    End If
 
-	''' <summary>
-	''' If the XML reader tries to read a file that is being updated, an error can occur
-	''' This function only has Try/Catch blocks when reading specific entries within a section
-	''' The calling function is expected to catch and handle other errors
-	''' </summary>
-	''' <param name="strIniFilePath"></param>
-	''' <returns></returns>
-	''' <remarks></remarks>
-	Private Function StrFGetProcesses(ByVal strIniFilePath As String) As CProcessSettings()
-		Dim oLProgramsSettings As New List(Of CProcessSettings)
-		Dim oCXmlReader As XmlReader
+                Else
+                    ' Updated entry
+                    Dim oCProcessRunner As clsProcessRunner = m_ProgRunners.Item(uniqueProgramKey)
+                    oCProcessRunner.UpdateProcessParameters(oProcessSettings)
+                    lstProgRunners(uniqueProgramKey) = True
 
-		Dim strSectionName As String = ""
-		Dim strKeyName As String = ""
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Updated program '" & uniqueProgramKey & "'")
+                End If
+            Catch ex As Exception
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error in UpdateProgRunnersFromFile updating process '" & uniqueProgramKey & "': " & ex.Message)
+            End Try
 
-		oCXmlReader = XmlReader.Create(New System.IO.FileStream(strIniFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-		While oCXmlReader.Read()
-			Select Case oCXmlReader.NodeType
-				Case XmlNodeType.Element
-					If oCXmlReader.Name = "section" Then
-						Try
-							strSectionName = oCXmlReader.GetAttribute("name")
-						Catch ex As Exception
-							' Section element doesn't have a "name" attribute; set strSectionName to ""
-							strSectionName = String.Empty
+        Next
 
-							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error parsing XML Config file: " & ex.Message)
-						End Try
+        Try
+            'Remove disappeared processes
+            Dim lstProcessesToStop As New List(Of String)
 
-						If strSectionName Is Nothing Then strSectionName = String.Empty
-					Else
+            For Each progRunnerEntry As KeyValuePair(Of String, clsProcessRunner) In m_ProgRunners
+                Dim enabled As Boolean = False
+                If lstProgRunners.TryGetValue(progRunnerEntry.Key, enabled) Then
+                    If Not enabled Then
+                        lstProcessesToStop.Add(progRunnerEntry.Key)
+                    End If
+                End If                
+            Next
 
-						' Need to debug this against the MultiProgRunner.xml file on Pub-14
-						' Make sure this line is skipped:
-						' <comment><itemDisabled key="XTandAnalysis" value="C:\DMS_Programs\DMS5\AnalysisManagerXTandem\AnalysisManagerProg.exe" arguments="" run="Repeat" holdoff="300" /></comment>
+            For Each uniqueProgramKey In lstProcessesToStop
+                m_ProgRunners.Item(uniqueProgramKey).StopThread()
+                m_ProgRunners.Remove(uniqueProgramKey)
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Deleted program '" & uniqueProgramKey & "'")
+            Next
 
-						If oCXmlReader.Depth = 2 AndAlso strSectionName = "programs" AndAlso oCXmlReader.Name = "item" Then
+        Catch ex As Exception
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error in UpdateProgRunnersFromFile removing old processes: " & ex.Message)
+        End Try
 
-							Try
+    End Sub
 
-								strKeyName = oCXmlReader.GetAttribute("key")
-								Dim oCProgramSettings As CProcessSettings = New CProcessSettings()
-								oCProgramSettings.StrKey = strKeyName
-								oCProgramSettings.StrProgram = GetAttributeSafe(oCXmlReader, "value")
-								oCProgramSettings.StrArguments = GetAttributeSafe(oCXmlReader, "arguments")
-								oCProgramSettings.StrRepeat = GetAttributeSafe(oCXmlReader, "run", "Once")
-								oCProgramSettings.StrHoldOff = GetAttributeSafe(oCXmlReader, "holdoff", 10)
-								oLProgramsSettings.Add(oCProgramSettings)
+    Public Sub StopAllProgRunners()
+        For Each oCKeyValuePair As KeyValuePair(Of String, clsProcessRunner) In m_ProgRunners
+            m_ProgRunners.Item(oCKeyValuePair.Key).StopThread()
+        Next
+        m_ProgRunners.Clear()
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "MultiProgRunner stopped")
+    End Sub
 
-							Catch ex As Exception
-								' Ignore this entry
-								clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error parsing XML Config file: " & ex.Message)
-							End Try
+    Protected Overrides Sub Finalize()
+        Try
+            StopAllProgRunners()
+        Catch ex As Exception
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to StopAllProgRunners")
+        Finally
+            MyBase.Finalize()
+        End Try
+    End Sub
 
-						End If
+    Private Sub m_FileWatcher_Changed(ByVal sender As Object, ByVal e As FileSystemEventArgs) Handles m_FileWatcher.Changed
+        mUpdateSettingsFromFile = True
+        mUpdateSettingsRequestTime = DateTime.UtcNow
+    End Sub
 
-					End If
+    Private Sub UpdateSettingsFromFile()
+        Const MAX_READ_ATTEMPTS As Integer = 3
 
-				Case XmlNodeType.EndElement
-					If oCXmlReader.Name = "section" Then
-						strSectionName = String.Empty
-					End If
+        For iTime As Integer = 1 To MAX_READ_ATTEMPTS
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "File changed")
 
-			End Select
-		End While
-		oCXmlReader.Close()
-		Return oLProgramsSettings.ToArray()
-	End Function
+            'When file was written program gets few events.
+            'During some events XML reader can't open file. So use try-catch
+            Try
+                UpdateProgRunnersFromFile(True)
+                Exit For
+            Catch ex As Exception
+                If iTime < MAX_READ_ATTEMPTS Then
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error reading XML file (will try again): " & ex.Message)
+                Else
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error reading XML file (tried " & MAX_READ_ATTEMPTS.ToString & " times): " & ex.Message)
+                End If
+            End Try
+
+            Thread.Sleep(1000)
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' If the XML reader tries to read a file that is being updated, an error can occur
+    ''' This function only has Try/Catch blocks when reading specific entries within a section
+    ''' The calling function is expected to catch and handle other errors
+    ''' </summary>
+    ''' <param name="strIniFilePath"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function GetProcesses(ByVal strIniFilePath As String) As List(Of clsProcessSettings)
+        Dim lstProgramSettings As New List(Of clsProcessSettings)
+
+        Dim strSectionName As String = ""
+
+        Using oReader = XmlReader.Create(New FileStream(strIniFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+
+            While oReader.Read()
+                Select Case oReader.NodeType
+                    Case XmlNodeType.Element
+                        If oReader.Name = "section" Then
+                            Try
+                                strSectionName = oReader.GetAttribute("name")
+                            Catch ex As Exception
+                                ' Section element doesn't have a "name" attribute; set strSectionName to ""
+                                strSectionName = String.Empty
+
+                                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error parsing XML Config file: " & ex.Message)
+                            End Try
+
+                            If strSectionName Is Nothing Then strSectionName = String.Empty
+                            Continue While
+                        End If
+
+                        ' Expected format:
+                        '   <section name="programs">
+                        '     <item key="Analysis1" value="C:\DMS_Programs\AnalysisToolManager1\StartManager1.bat" arguments="" run="Repeat" holdoff="300" />
+
+                        If oReader.Depth = 2 AndAlso strSectionName = "programs" AndAlso oReader.Name = "item" Then
+
+                            Dim strKeyName As String = ""
+
+                            Try
+
+                                strKeyName = oReader.GetAttribute("key")
+
+                                If String.IsNullOrWhiteSpace(strKeyName) Then
+                                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Empty key name; ignoring entry")
+                                End If
+
+                                Dim oProgramSettings As clsProcessSettings = New clsProcessSettings(strKeyName)
+
+                                oProgramSettings.ProgramPath = GetAttributeSafe(oReader, "value")
+                                oProgramSettings.ProgramArguments = GetAttributeSafe(oReader, "arguments")
+                                oProgramSettings.RepeatMode = GetAttributeSafe(oReader, "run", "Once")
+
+                                Dim holdOffSecondsText = GetAttributeSafe(oReader, "holdoff", "10")
+                                Dim holdOffSeconds As Integer
+
+                                If Not Integer.TryParse(holdOffSecondsText, holdOffSeconds) Then
+                                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Invalid ""Holdoff"" value for process '" & strKeyName & "': " & holdOffSecondsText & "; this value must be an integer (defining the holdoff time, in seconds).  Will assume 300")
+                                    holdOffSeconds = 300
+                                End If
+                                oProgramSettings.HoldoffSeconds = holdOffSeconds
+
+                                lstProgramSettings.Add(oProgramSettings)
+
+                            Catch ex As Exception
+                                ' Ignore this entry
+                                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error parsing XML Config file for key " & strKeyName & ": " & ex.Message)
+                            End Try
+
+                            Continue While
+
+                        End If
+
+
+                    Case XmlNodeType.EndElement
+                        If oReader.Name = "section" Then
+                            strSectionName = String.Empty
+                        End If
+
+                End Select
+            End While
+
+        End Using
+
+        Return lstProgramSettings
+
+    End Function
 
 	Private Function GetAttributeSafe(ByVal oCXmlReader As XmlReader, ByVal strAttributeName As String) As String
 		Return GetAttributeSafe(oCXmlReader, strAttributeName, String.Empty)
@@ -243,8 +293,7 @@ Public Class clsMainProg
 
 	Private Function GetAttributeSafe(ByVal oCXmlReader As XmlReader, ByVal strAttributeName As String, ByVal strDefaultValue As String) As String
 
-		Dim strValue As String
-		strValue = strDefaultValue
+        Dim strValue As String
 
 		Try
 			strValue = oCXmlReader.GetAttribute(strAttributeName)
@@ -256,14 +305,14 @@ Public Class clsMainProg
 		Return strValue
 	End Function
 
-	Private Sub mSettingsFileUpdateTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles mSettingsFileUpdateTimer.Elapsed
-		If mUpdateSettingsFromFile Then
-			If System.DateTime.UtcNow.Subtract(mUpdateSettingsRequestTime).TotalMilliseconds >= SETTINGS_FILE_UPDATE_DELAY_MSEC Then
-				mUpdateSettingsFromFile = False
+    Private Sub mSettingsFileUpdateTimer_Elapsed(ByVal sender As Object, ByVal e As Timers.ElapsedEventArgs) Handles mSettingsFileUpdateTimer.Elapsed
+        If mUpdateSettingsFromFile Then
+            If DateTime.UtcNow.Subtract(mUpdateSettingsRequestTime).TotalMilliseconds >= SETTINGS_FILE_UPDATE_DELAY_MSEC Then
+                mUpdateSettingsFromFile = False
 
-				UpdateSettingsFromFile()
-			End If
-		End If
-	End Sub
+                UpdateSettingsFromFile()
+            End If
+        End If
+    End Sub
 End Class
 

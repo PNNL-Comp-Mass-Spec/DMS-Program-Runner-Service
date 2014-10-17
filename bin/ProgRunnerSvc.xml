@@ -54,7 +54,12 @@ ProgRunnerSvc
  </summary>
 	<param name="InpLevel">LogLevels value defining level (Debug is most verbose)</param>
 	<remarks></remarks>
-</member><member name="M:ProgRunnerSvc.clsMainProg.StrFGetProcesses(System.String)">
+</member><member name="F:ProgRunnerSvc.clsMainProg.m_ProgRunners">
+	<summary>
+ Keys are the program name; values are the ProcessRunner object
+ </summary>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsMainProg.GetProcesses(System.String)">
 	<summary>
  If the XML reader tries to read a file that is being updated, an error can occur
  This function only has Try/Catch blocks when reading specific entries within a section
@@ -63,119 +68,140 @@ ProgRunnerSvc
 	<param name="strIniFilePath"></param>
 	<returns></returns>
 	<remarks></remarks>
-</member><member name="T:ProgRunnerSvc.CProcessRunner.EThreadState">
+</member><member name="T:ProgRunnerSvc.clsProcessRunner.eThreadState">
 	<summary> 
  Thread states. 
  </summary>
-</member><member name="F:ProgRunnerSvc.CProcessRunner.m_state">
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.ThreadState">
 	<summary>
- overall state of this object
+ Overall state of this object
  </summary>
-</member><member name="F:ProgRunnerSvc.CProcessRunner.m_Process">
+</member><member name="F:ProgRunnerSvc.clsProcessRunner.m_Process">
 	<summary>
  Used to start and monitor the external program. 
  </summary>
 	<remarks></remarks>
-</member><member name="F:ProgRunnerSvc.CProcessRunner.m_pid">
+</member><member name="F:ProgRunnerSvc.clsProcessRunner.m_pid">
 	<summary> 
  The process id of the currently running incarnation of the external program. 
  </summary>
-</member><member name="F:ProgRunnerSvc.CProcessRunner.m_Thread">
+</member><member name="F:ProgRunnerSvc.clsProcessRunner.m_Thread">
 	<summary>
  The internal thread used to run the monitoring code. That starts and monitors the external program. 
  </summary>
-</member><member name="F:ProgRunnerSvc.CProcessRunner.m_ThreadStopCommand">
+</member><member name="F:ProgRunnerSvc.clsProcessRunner.m_ThreadStopCommand">
 	<summary>
  Flag that tells internal thread to quit monitoring external program and exit. 
  </summary>
-</member><member name="F:ProgRunnerSvc.CProcessRunner.m_monitorInterval">
+</member><member name="F:ProgRunnerSvc.clsProcessRunner.m_monitorInterval">
 	<summary>
- The interval for monitoring thread to wake up and check m_doCleanup.
+ The interval (in milliseconds) for monitoring thread to wake up and check m_doCleanup.
  </summary>
-</member><member name="F:ProgRunnerSvc.CProcessRunner.m_ExitCode">
+</member><member name="F:ProgRunnerSvc.clsProcessRunner.m_ExitCode">
 	<summary>
  Exit code returned by completed process.
  </summary>
-</member><member name="F:ProgRunnerSvc.CProcessRunner.m_StrKeyName">
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.KeyName">
 	<summary>
- Parameters for external program. 
+ Key name for this program (unique across all programs registered to run)
  </summary>
-</member><member name="P:ProgRunnerSvc.CProcessRunner.MonitoringInterval">
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.ProgramPath">
+	<summary>
+ Path to the program (.exe) to run
+ </summary>
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.ProgramArguments">
+	<summary>
+ Arguments to pass to the program
+ </summary>
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.RepeatMode">
+	<summary>
+ Repeat mode, valid values are Repeat, Once, and No
+ </summary>
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.Holdoff">
+	<summary>
+ Holdoff time, in seconds (not milliseconds)
+ </summary>
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.MonitoringInterval">
 	<summary> 
  How often (milliseconds) internal monitoring thread checks status of external program.
  </summary>
-</member><member name="P:ProgRunnerSvc.CProcessRunner.PID">
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.PID">
 	<summary> 
  Process id of currently running external program's process. 
  </summary>
-</member><member name="P:ProgRunnerSvc.CProcessRunner.State">
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.State">
 	<summary> 
  Current state of prog runner (as number). 
  </summary>
-</member><member name="P:ProgRunnerSvc.CProcessRunner.Repeat">
-	<summary> 
- Whether prog runner will restart external program after it exits. 
- </summary>
-</member><member name="P:ProgRunnerSvc.CProcessRunner.RepeatHoldOffTime">
-	<summary> 
- Time (seconds) that prog runner waits to restart external program after it exits. 
- </summary>
-</member><member name="P:ProgRunnerSvc.CProcessRunner.Name">
-	<summary> 
- Name of this progrunner.
-  </summary>
-</member><member name="P:ProgRunnerSvc.CProcessRunner.ExitCode">
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.ExitCode">
 	<summary> 
  Exit code when process completes. 
  </summary>
-</member><member name="P:ProgRunnerSvc.CProcessRunner.WorkDir">
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.WorkDir">
 	<summary> 
  Working directory for process execution. 
  </summary>
-</member><member name="P:ProgRunnerSvc.CProcessRunner.CreateNoWindow">
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.CreateNoWindow">
 	<summary> 
  Determine if window should be displayed. 
  </summary>
-</member><member name="P:ProgRunnerSvc.CProcessRunner.WindowStyle">
+</member><member name="P:ProgRunnerSvc.clsProcessRunner.WindowStyle">
 	<summary> 
  Window style to use when CreateNoWindow is False. 
  </summary>
-</member><member name="M:ProgRunnerSvc.CProcessRunner.#ctor">
-	<summary> 
- Initializes a new instance of the clsProgRunner class. 
- </summary>
-</member><member name="M:ProgRunnerSvc.CProcessRunner.#ctor(System.String,System.String,System.String,System.String,System.String)">
+</member><member name="M:ProgRunnerSvc.clsProcessRunner.#ctor(ProgRunnerSvc.clsProcessSettings)">
 	<summary>
- Instantiate new prog runner instance
+ Instantiate new process runner instance
  </summary>
-	<param name="StrProcessRunnerName">Process runner name</param>
-	<param name="StrProgramName">Program name</param>
-	<param name="StrProgramArguments">Program arguments</param>
-	<param name="StrRepeat">Repeat mode.  Can be Repeat, Once, or No</param>
-	<param name="StrHoldoff">Holdoff time (in seconds) between when program exits to when it restarts if the Repeat mode is Repeat</param>
+	<param name="processSettings">Process settings</param>
 	<remarks></remarks>
-</member><member name="M:ProgRunnerSvc.CProcessRunner.vFUpdateProcessParameters(System.String,System.String,System.String,System.String)">
+</member><member name="M:ProgRunnerSvc.clsProcessRunner.#ctor(ProgRunnerSvc.clsProcessSettings,System.String)">
+	<summary>
+ Instantiate new process runner instance
+ </summary>
+	<param name="processSettings">Process settings</param>
+	<param name="workingDirectory">Working directory path</param>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsProcessRunner.#ctor(ProgRunnerSvc.clsProcessSettings,System.String,System.Boolean)">
+	<summary>
+ Instantiate new process runner instance
+ </summary>
+	<param name="processSettings">Process settings</param>
+	<param name="workingDirectory">Working directory path</param>
+	<param name="bCreateNoWindow">True to create no window, false to use a normal window</param>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsProcessRunner.#ctor(ProgRunnerSvc.clsProcessSettings,System.String,System.Diagnostics.ProcessWindowStyle,System.Boolean)">
+	<summary>
+ Instantiate new process runner instance
+ </summary>
+	<param name="processSettings">Process settings</param>
+	<param name="workingDirectory">Working directory path</param>
+	<param name="eWindowStyle">Window style</param>
+	<param name="bCreateNoWindow">True to create no window, false to use windowStyle</param>
+	<remarks></remarks>
+</member><member name="M:ProgRunnerSvc.clsProcessRunner.UpdateProcessParameters(ProgRunnerSvc.clsProcessSettings)">
 	<summary> 
  Update settings for existing prog runner instance
  </summary>
-	<param name="StrProgramName">Program name</param>
-	<param name="StrProgramArguments">Program arguments</param>
-	<param name="StrRepeat">Repeat mode.  Can be Repeat, Once, or No</param>
-	<param name="StrHoldoff">Holdoff time (in seconds) between when program exits to when it restarts if the Repeat mode is Repeat</param>
-</member><member name="M:ProgRunnerSvc.CProcessRunner.vFStartThread">
+	<param name="newProgramInfo">New program info</param>
+	<remarks>Key name is ignored in newProgramInfo</remarks>
+</member><member name="M:ProgRunnerSvc.clsProcessRunner.StartThread">
 	<summary> 
  Creates a new thread and starts code that runs and monitors a program in it. 
  </summary>
-</member><member name="M:ProgRunnerSvc.CProcessRunner.vFStopThread">
+</member><member name="M:ProgRunnerSvc.clsProcessRunner.StopThread">
 	<summary> 
  Causes monitoring thread to exit on its next monitoring cycle. 
  </summary>
-</member><member name="M:ProgRunnerSvc.CProcessRunner.vFProcessThread">
+</member><member name="M:ProgRunnerSvc.clsProcessRunner.ProcessThread">
 	<summary> 
  Start program as external process and monitor its state. 
  </summary>
-</member><member name="T:ProgRunnerSvc.CProcessRunner">
-	<summary> This class runs a single program as an external process and monitors it with an internal thread. </summary>
+</member><member name="T:ProgRunnerSvc.clsProcessRunner">
+	<summary>
+ This class runs a single program as an external process and monitors it with an internal thread. 
+ </summary>
+	<remarks></remarks>
 </member>
 </members>
 </doc>

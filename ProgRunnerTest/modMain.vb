@@ -1,10 +1,9 @@
 ﻿Option Strict On
 
-Imports System.IO
 Imports System.Threading
 
 
-Module Module1
+Module modMain
     Sub Main()
         Dim MyProgRunner As New ProgRunnerSvc.clsMainProg()
 

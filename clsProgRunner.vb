@@ -4,525 +4,541 @@ Imports System.Threading
 Imports System.IO
 Imports System.Diagnostics
 
-' This class runs a single program as an external process
-' and monitors it with an internal thread
-'
-''' <summary> This class runs a single program as an external process and monitors it with an internal thread. </summary>
-Public Class CProcessRunner
+''' <summary>
+''' This class runs a single program as an external process and monitors it with an internal thread. 
+''' </summary>
+''' <remarks></remarks>
+Public Class clsProcessRunner
 
-	''' <summary> 
-	''' Thread states. 
-	''' </summary>
-	Public Enum EThreadState
-		No
-		ProcessBroken
-		Idle
-		ProcessStarting
-		ProcessRunning
-	End Enum
+    ''' <summary> 
+    ''' Thread states. 
+    ''' </summary>
+    Public Enum eThreadState
+        No
+        ProcessBroken
+        Idle
+        ProcessStarting
+        ProcessRunning
+    End Enum
 
-	''' <summary>
-	''' overall state of this object
-	''' </summary>
-	Public m_state As EThreadState
+    Protected m_state As eThreadState
 
+    ''' <summary>
+    ''' Overall state of this object
+    ''' </summary>
+    Public ReadOnly Property ThreadState As eThreadState
+        Get
+            Return m_state
+        End Get
+    End Property
 
-	''' <summary>
-	''' Used to start and monitor the external program. 
-	''' </summary>
-	''' <remarks></remarks>
-	Private m_Process As New Process
+    ''' <summary>
+    ''' Used to start and monitor the external program. 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private ReadOnly m_Process As New Process
 
-	''' <summary> 
-	''' The process id of the currently running incarnation of the external program. 
-	''' </summary>
-	Private m_pid As Integer
+    ''' <summary> 
+    ''' The process id of the currently running incarnation of the external program. 
+    ''' </summary>
+    Private m_pid As Integer
 
-	''' <summary>
-	''' The internal thread used to run the monitoring code. That starts and monitors the external program. 
-	''' </summary>
-	Private m_Thread As Thread
+    ''' <summary>
+    ''' The internal thread used to run the monitoring code. That starts and monitors the external program. 
+    ''' </summary>
+    Private m_Thread As Thread
 
-	''' <summary>
-	''' Flag that tells internal thread to quit monitoring external program and exit. 
-	''' </summary>
-	Private m_ThreadStopCommand As Boolean = False
+    ''' <summary>
+    ''' Flag that tells internal thread to quit monitoring external program and exit. 
+    ''' </summary>
+    Private m_ThreadStopCommand As Boolean = False
 
-	''' <summary>
-	''' The interval for monitoring thread to wake up and check m_doCleanup.
-	''' </summary>
-	Private m_monitorInterval As Integer = 1000	' (miliseconds)
+    ''' <summary>
+    ''' The interval (in milliseconds) for monitoring thread to wake up and check m_doCleanup.
+    ''' </summary>
+    Private m_monitorInterval As Integer = 1000
 
-	''' <summary>
-	''' Exit code returned by completed process.
-	''' </summary>
-	Private m_ExitCode As Integer
+    ''' <summary>
+    ''' Exit code returned by completed process.
+    ''' </summary>
+    Private m_ExitCode As Integer
 
-	''' <summary>
-	''' Parameters for external program. 
-	''' </summary>
-	Private m_StrKeyName As String
-	Public m_StrProgramName As String
-	Public m_StrProgramArguments As String
-	Public m_StrRepeat As String = "No"
-	Public m_Holdoff As Single			  ' Holdoff time, in seconds (not milliseconds)
-	Private m_WorkDir As String
-	Private m_CreateNoWindow As Boolean
-	Private m_WindowStyle As System.Diagnostics.ProcessWindowStyle
-	Private oSync As Object = 1
+    Protected m_KeyName As String
 
-	Private bUpdate As Boolean = False
-	Public StrNewProgramName As String
-	Public StrNewProgramArguments As String
-	Public StrNewRepeat As String
-	Public StrNewHoldoff As String
+    ''' <summary>
+    ''' Key name for this program (unique across all programs registered to run)
+    ''' </summary>
+    Public ReadOnly Property KeyName As String
+        Get
+            Return m_KeyName
+        End Get
+    End Property
 
-	''' <summary> 
-	''' How often (milliseconds) internal monitoring thread checks status of external program.
-	''' </summary>
-	Public Property MonitoringInterval() As Integer
-		Get
-			Return m_monitorInterval
-		End Get
-		Set(ByVal Value As Integer)
-			m_monitorInterval = Value
-		End Set
-	End Property
+    Protected m_ProgramInfo As clsProcessSettings
+    Protected m_NewProgramInfo As clsProcessSettings
 
-	Public bIsUpdatedFromFile As Boolean
+    ''' <summary>
+    ''' Path to the program (.exe) to run
+    ''' </summary>
+    Public ReadOnly Property ProgramPath As String
+        Get
+            Return m_ProgramInfo.ProgramPath
+        End Get
+    End Property
 
-	''' <summary> 
-	''' Process id of currently running external program's process. 
-	''' </summary>
-	Public ReadOnly Property PID() As Integer
-		Get
-			Return m_pid
-		End Get
-	End Property
+    ''' <summary>
+    ''' Arguments to pass to the program
+    ''' </summary>
+    Public ReadOnly Property ProgramArguments As String
+        Get
+            Return m_ProgramInfo.ProgramArguments
+        End Get
+    End Property
 
-	''' <summary> 
-	''' Current state of prog runner (as number). 
-	''' </summary>
-	Public ReadOnly Property State() As EThreadState
-		Get
-			Return m_state
-		End Get
-	End Property
+    ''' <summary>
+    ''' Repeat mode, valid values are Repeat, Once, and No
+    ''' </summary>
+    Public ReadOnly Property RepeatMode As String
+        Get
+            Return m_ProgramInfo.RepeatMode
+        End Get
+    End Property
 
-	''' <summary> 
-	''' Whether prog runner will restart external program after it exits. 
-	''' </summary>
-	Public Property Repeat() As String
-		Get
-			Return m_StrRepeat
-		End Get
-		Set(ByVal Value As String)
-			If Value <> Nothing Then
-				m_StrRepeat = CapitalizeMode(Value)
-			End If
-		End Set
-	End Property
+    ''' <summary>
+    ''' Holdoff time, in seconds (not milliseconds)
+    ''' </summary>
+    Public ReadOnly Property Holdoff As Integer
+        Get
+            Return m_ProgramInfo.HoldoffSeconds
+        End Get
+    End Property
 
-	''' <summary> 
-	''' Time (seconds) that prog runner waits to restart external program after it exits. 
-	''' </summary>
-	Public Property RepeatHoldOffTime() As Single
-		Get
-			Return m_Holdoff
-		End Get
-		Set(ByVal Value As Single)
-			m_Holdoff = Value
-		End Set
-	End Property
+    Private m_WorkDir As String
+    Private m_CreateNoWindow As Boolean
+    Private m_WindowStyle As ProcessWindowStyle
+    Private ReadOnly oSync As Object = 1
 
-	''' <summary> 
-	''' Name of this progrunner.
-	'''  </summary>
-	Public Property Name() As String
-		Get
-			Return m_StrKeyName
-		End Get
-		Set(ByVal Value As String)
-			m_StrKeyName = Value
-		End Set
-	End Property
+    Private mUpdateRequired As Boolean = False
 
-	''' <summary> 
-	''' Exit code when process completes. 
-	''' </summary>
-	Public ReadOnly Property ExitCode() As Integer
-		Get
-			Return m_ExitCode
-		End Get
-	End Property
+    ''' <summary> 
+    ''' How often (milliseconds) internal monitoring thread checks status of external program.
+    ''' </summary>
+    Public Property MonitoringInterval() As Integer
+        Get
+            Return m_monitorInterval
+        End Get
+        Set(ByVal Value As Integer)
+            If Value < 100 Then Value = 100
+            m_monitorInterval = Value
+        End Set
+    End Property
 
-	''' <summary> 
-	''' Working directory for process execution. 
-	''' </summary>
-	Public Property WorkDir() As String
-		Get
-			Return m_WorkDir
-		End Get
-		Set(ByVal Value As String)
-			m_WorkDir = Value
-		End Set
-	End Property
+    ''' <summary> 
+    ''' Process id of currently running external program's process. 
+    ''' </summary>
+    Public ReadOnly Property PID() As Integer
+        Get
+            Return m_pid
+        End Get
+    End Property
 
-	''' <summary> 
-	''' Determine if window should be displayed. 
-	''' </summary>
-	Public Property CreateNoWindow() As Boolean
-		Get
-			Return m_CreateNoWindow
-		End Get
-		Set(ByVal Value As Boolean)
-			m_CreateNoWindow = Value
-		End Set
-	End Property
+    ''' <summary> 
+    ''' Current state of prog runner (as number). 
+    ''' </summary>
+    Public ReadOnly Property State() As eThreadState
+        Get
+            Return m_state
+        End Get
+    End Property
 
-	''' <summary> 
-	''' Window style to use when CreateNoWindow is False. 
-	''' </summary>
-	Public Property WindowStyle() As System.Diagnostics.ProcessWindowStyle
-		Get
-			Return m_WindowStyle
-		End Get
-		Set(ByVal Value As System.Diagnostics.ProcessWindowStyle)
-			m_WindowStyle = Value
-		End Set
-	End Property
+    ''' <summary> 
+    ''' Exit code when process completes. 
+    ''' </summary>
+    Public ReadOnly Property ExitCode() As Integer
+        Get
+            Return m_ExitCode
+        End Get
+    End Property
 
-	''' <summary> 
-	''' Initializes a new instance of the clsProgRunner class. 
-	''' </summary>
-	Public Sub New()
-		m_WorkDir = ""
-		m_CreateNoWindow = False
-		m_ExitCode = -12354	 'Unreasonable value in case I missed setting it somewhere
-	End Sub
+    ''' <summary> 
+    ''' Working directory for process execution. 
+    ''' </summary>
+    Public ReadOnly Property WorkDir() As String
+        Get
+            Return m_WorkDir
+        End Get
+    End Property
 
-	''' <summary>
-	''' Instantiate new prog runner instance
-	''' </summary>
-	''' <param name="StrProcessRunnerName">Process runner name</param>
-	''' <param name="StrProgramName">Program name</param>
-	''' <param name="StrProgramArguments">Program arguments</param>
-	''' <param name="StrRepeat">Repeat mode.  Can be Repeat, Once, or No</param>
-	''' <param name="StrHoldoff">Holdoff time (in seconds) between when program exits to when it restarts if the Repeat mode is Repeat</param>
-	''' <remarks></remarks>
-	Public Sub New(ByVal StrProcessRunnerName As String, ByVal StrProgramName As String, ByVal StrProgramArguments As String, ByVal StrRepeat As String, ByVal StrHoldoff As String)
-		m_state = EThreadState.No
-		m_StrKeyName = StrProcessRunnerName
-		StrNewProgramName = StrProgramName
-		StrNewProgramArguments = StrProgramArguments
-		StrNewRepeat = StrRepeat
-		StrNewHoldoff = StrHoldoff
-		bUpdate = True
-		vFStartThread()
-	End Sub
+    ''' <summary> 
+    ''' Determine if window should be displayed. 
+    ''' </summary>
+    Public ReadOnly Property CreateNoWindow() As Boolean
+        Get
+            Return m_CreateNoWindow
+        End Get
+    End Property
 
-	''' <summary> 
-	''' Update settings for existing prog runner instance
-	''' </summary>
-	''' <param name="StrProgramName">Program name</param>
-	''' <param name="StrProgramArguments">Program arguments</param>
-	''' <param name="StrRepeat">Repeat mode.  Can be Repeat, Once, or No</param>
-	''' <param name="StrHoldoff">Holdoff time (in seconds) between when program exits to when it restarts if the Repeat mode is Repeat</param>
-	Public Sub vFUpdateProcessParameters(ByVal StrProgramName As String, ByVal StrProgramArguments As String, ByVal StrRepeat As String, ByVal StrHoldoff As String)
-		Try
-			Monitor.Enter(oSync)
-			StrNewProgramName = StrProgramName
-			StrNewProgramArguments = StrProgramArguments
-			StrNewRepeat = StrRepeat
-			StrNewHoldoff = StrHoldoff
-			bUpdate = True
-			Monitor.Exit(oSync)
-		Catch
-			bUpdate = bUpdate
-		End Try
-	End Sub
+    ''' <summary> 
+    ''' Window style to use when CreateNoWindow is False. 
+    ''' </summary>
+    Public ReadOnly Property WindowStyle() As ProcessWindowStyle
+        Get
+            Return m_WindowStyle
+        End Get
+    End Property
 
-	''' <summary> 
-	''' Creates a new thread and starts code that runs and monitors a program in it. 
-	''' </summary>
-	Public Sub vFStartThread()
-		If m_state = EThreadState.No Then
-			Try
-				Dim m_ThreadStart As New ThreadStart(AddressOf Me.vFProcessThread)
-				m_Thread = New Thread(m_ThreadStart)
-				m_Thread.Start()
-			Catch ex As Exception
-				m_state = EThreadState.ProcessBroken
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to create thread: " & m_StrKeyName)
-			End Try
-		End If
-	End Sub
+    ''' <summary>
+    ''' Instantiate new process runner instance
+    ''' </summary>
+    ''' <param name="processSettings">Process settings</param>
+    ''' <remarks></remarks>
+    Public Sub New(ByVal processSettings As clsProcessSettings)
+        Initialize(processSettings, m_WorkDir, ProcessWindowStyle.Normal, False)
+    End Sub
 
-	''' <summary> 
-	''' Causes monitoring thread to exit on its next monitoring cycle. 
-	''' </summary>
-	Public Sub vFStopThread()
-		If m_state = EThreadState.ProcessBroken Or m_state = EThreadState.No Then
-			Exit Sub
-		End If
+    ''' <summary>
+    ''' Instantiate new process runner instance
+    ''' </summary>
+    ''' <param name="processSettings">Process settings</param>
+    ''' <param name="workingDirectory">Working directory path</param>
+    ''' <remarks></remarks>
+    Public Sub New(ByVal processSettings As clsProcessSettings, ByVal workingDirectory As String)
+        Initialize(processSettings, workingDirectory, ProcessWindowStyle.Normal, False)
+    End Sub
 
-		m_ThreadStopCommand = True
-		If m_state = EThreadState.ProcessRunning Then
-			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Try to kill process: " & m_StrKeyName)
-			Try
-				m_Process.Kill()
-				'Catch ex As System.ComponentModel.Win32Exception
-				'ThrowConditionalException(CType(ex, Exception), "Caught Win32Exception while trying to kill process.")
-				'Catch ex As System.InvalidOperationException
-				'ThrowConditionalException(CType(ex, Exception), "Caught InvalidOperationException while trying to kill thread.")
-			Catch ex As Exception
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, "Exception killing process '" & m_StrKeyName & "': " & ex.Message)
-			End Try
-			If Not m_Process.WaitForExit(m_monitorInterval) Then
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to kill process '" & m_StrKeyName & "'")
-			Else
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Killed process: " & m_StrKeyName)
-			End If
-		End If
+    ''' <summary>
+    ''' Instantiate new process runner instance
+    ''' </summary>
+    ''' <param name="processSettings">Process settings</param>
+    ''' <param name="workingDirectory">Working directory path</param>
+    ''' <param name="bCreateNoWindow">True to create no window, false to use a normal window</param>
+    ''' <remarks></remarks>
+    Public Sub New(
+      ByVal processSettings As clsProcessSettings,
+      ByVal workingDirectory As String,
+      ByVal bCreateNoWindow As Boolean)
+        Initialize(processSettings, workingDirectory, ProcessWindowStyle.Normal, bCreateNoWindow)
+    End Sub
 
-		Try
-			m_Thread.Join(m_monitorInterval)
-		Catch ex As Exception
-			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to wait while stopping thread '" & m_StrKeyName & "': " & ex.Message)
-		End Try
+    ''' <summary>
+    ''' Instantiate new process runner instance
+    ''' </summary>
+    ''' <param name="processSettings">Process settings</param>
+    ''' <param name="workingDirectory">Working directory path</param>
+    ''' <param name="eWindowStyle">Window style</param>
+    ''' <param name="bCreateNoWindow">True to create no window, false to use windowStyle</param>
+    ''' <remarks></remarks>
+    Public Sub New(
+      ByVal processSettings As clsProcessSettings,
+      ByVal workingDirectory As String,
+      ByVal eWindowStyle As ProcessWindowStyle,
+      ByVal bCreateNoWindow As Boolean)
+        Initialize(processSettings, workingDirectory, eWindowStyle, bCreateNoWindow)
+    End Sub
 
-		If m_Thread.IsAlive() = True Then
-			clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Try to abort thread: " & m_StrKeyName)
-			Try
-				m_Thread.Abort()
-			Catch ex As Exception
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to stop thread '" & m_StrKeyName & "': " & ex.Message)
-			End Try
+    Protected Sub Initialize(
+        ByVal processSettings As clsProcessSettings,
+        ByVal workingDirectory As String,
+        ByVal eWindowStyle As ProcessWindowStyle,
+        ByVal bCreateNoWindow As Boolean)
 
-		End If
-	End Sub
+        m_state = eThreadState.No
+        m_KeyName = processSettings.UniqueKey
+        m_ProgramInfo = New clsProcessSettings(m_KeyName)
 
-	Private Function CapitalizeMode(ByVal strMode As String) As String
+        m_NewProgramInfo = processSettings
 
-		If strMode Is Nothing Then
-			strMode = String.Empty
-		Else
-			If strMode.Length = 1 Then
-				strMode = strMode.ToUpper
-			ElseIf strMode.Length > 1 Then
-				strMode = strMode.Substring(0, 1).ToUpper & strMode.Substring(1).ToLower
-			End If
-		End If
+        m_WorkDir = workingDirectory
+        m_WindowStyle = eWindowStyle
+        m_CreateNoWindow = bCreateNoWindow
 
-		Return strMode
+        mUpdateRequired = True
+        StartThread()
+    End Sub
 
-	End Function
+    ''' <summary> 
+    ''' Update settings for existing prog runner instance
+    ''' </summary>
+    ''' <param name="newProgramInfo">New program info</param>
+    ''' <remarks>Key name is ignored in newProgramInfo</remarks>
+    Public Sub UpdateProcessParameters(ByVal newProgramInfo As clsProcessSettings)
+        Try
+            Monitor.Enter(oSync)
+            m_NewProgramInfo = newProgramInfo
+            mUpdateRequired = True
+            Monitor.Exit(oSync)
+        Catch
+            mUpdateRequired = mUpdateRequired
+        End Try
+    End Sub
 
-	''' <summary> 
-	''' Start program as external process and monitor its state. 
-	''' </summary>
-	Private Sub vFProcessThread()
-		Const REPEAT_HOLDOFF_SLEEP_TIME_MSEC As Integer = 1000
+    ''' <summary> 
+    ''' Creates a new thread and starts code that runs and monitors a program in it. 
+    ''' </summary>
+    Public Sub StartThread()
+        If m_state = eThreadState.No Then
+            Try
+                Dim m_ThreadStart As New ThreadStart(AddressOf Me.ProcessThread)
+                m_Thread = New Thread(m_ThreadStart)
+                m_Thread.Start()
+            Catch ex As Exception
+                m_state = eThreadState.ProcessBroken
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to create thread: " & m_KeyName)
+            End Try
+        End If
+    End Sub
 
-		clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Thread started: " & m_StrKeyName)
-		Do
-			If m_ThreadStopCommand = True Then
-				Exit Do
-			End If
+    ''' <summary> 
+    ''' Causes monitoring thread to exit on its next monitoring cycle. 
+    ''' </summary>
+    Public Sub StopThread()
+        If m_state = eThreadState.ProcessBroken Or m_state = eThreadState.No Then
+            Exit Sub
+        End If
 
-			If bUpdate Then
-				' Parameters have changed; update them
-				bUpdate = False
+        m_ThreadStopCommand = True
+        If m_state = eThreadState.ProcessRunning Then
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Try to kill process: " & m_KeyName)
+            Try
+                m_Process.Kill()
+                'Catch ex As System.ComponentModel.Win32Exception
+                'ThrowConditionalException(CType(ex, Exception), "Caught Win32Exception while trying to kill process.")
+                'Catch ex As System.InvalidOperationException
+                'ThrowConditionalException(CType(ex, Exception), "Caught InvalidOperationException while trying to kill thread.")
+            Catch ex As Exception
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, "Exception killing process '" & m_KeyName & "': " & ex.Message)
+            End Try
+            If Not m_Process.WaitForExit(m_monitorInterval) Then
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to kill process '" & m_KeyName & "'")
+            Else
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Killed process: " & m_KeyName)
+            End If
+        End If
 
-				m_state = EThreadState.Idle
-				UpdateThreadParameters(False)
-			End If
+        Try
+            m_Thread.Join(m_monitorInterval)
+        Catch ex As Exception
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to wait while stopping thread '" & m_KeyName & "': " & ex.Message)
+        End Try
 
-			If m_state = EThreadState.ProcessStarting Then
-				Try
-					With m_Process.StartInfo
-						.FileName = m_StrProgramName
-						.WorkingDirectory = m_WorkDir
-						.Arguments = m_StrProgramArguments
-						.CreateNoWindow = m_CreateNoWindow
-						If .CreateNoWindow Then
-							.WindowStyle = ProcessWindowStyle.Hidden
-						Else
-							.WindowStyle = m_WindowStyle
-						End If
-					End With
-					m_Process.Start()
-					m_state = EThreadState.ProcessRunning
-					m_pid = m_Process.Id
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Started: " & m_StrKeyName & ", pID=" & m_pid.ToString)
+        If m_Thread.IsAlive() = True Then
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Try to abort thread: " & m_KeyName)
+            Try
+                m_Thread.Abort()
+            Catch ex As Exception
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to stop thread '" & m_KeyName & "': " & ex.Message)
+            End Try
 
-					While Not (m_ThreadStopCommand Or m_Process.HasExited)
-						m_Process.WaitForExit(m_monitorInterval)
-					End While
+        End If
+    End Sub
 
-					If m_ThreadStopCommand = True Then
-						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Stopped: " & m_StrKeyName)
-						Exit Do
-					Else
-						If m_StrRepeat = "Repeat" Then
-							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Waiting: " & m_StrKeyName)
-						Else
-							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Stopped: " & m_StrKeyName)
-						End If
-					End If
-				Catch ex As Exception
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error running process '" & m_StrKeyName & "': " & ex.Message)
-					m_state = EThreadState.ProcessBroken
-					Exit Sub
-				End Try
+    Private Function CapitalizeMode(ByVal strMode As String) As String
 
-				Try
-					m_pid = 0
-					m_ExitCode = m_Process.ExitCode
-					m_Process.Close()
-					m_state = EThreadState.Idle
-					If m_StrRepeat = "Repeat" Then
-						' Process has exited; but its mode is repeat
-						' Wait for m_Holdoff seconds, then set m_state to EThreadState.ProcessStarting
+        If strMode Is Nothing Then
+            strMode = String.Empty
+        Else
+            If strMode.Length = 1 Then
+                strMode = strMode.ToUpper()
+            ElseIf strMode.Length > 1 Then
+                strMode = strMode.Substring(0, 1).ToUpper() & strMode.Substring(1).ToLower()
+            End If
+        End If
 
-						Dim dtHoldoffStartTime As DateTime
-						dtHoldoffStartTime = System.DateTime.UtcNow
-						Do
-							System.Threading.Thread.Sleep(REPEAT_HOLDOFF_SLEEP_TIME_MSEC)
+        Return strMode
 
-							If bUpdate Then
-								' Update the current values for m_StrRepeat and m_Holdoff
-								' However, don't set bUpdate to False since we're not updating the other parameters
-								UpdateThreadParameters(True)
+    End Function
 
-								If m_StrRepeat <> "Repeat" Then Exit Do
-							End If
-						Loop While System.DateTime.UtcNow.Subtract(dtHoldoffStartTime).TotalSeconds < m_Holdoff
+    ''' <summary> 
+    ''' Start program as external process and monitor its state. 
+    ''' </summary>
+    Private Sub ProcessThread()
+        Const REPEAT_HOLDOFF_SLEEP_TIME_MSEC As Integer = 1000
 
-						If m_StrRepeat = "Repeat" Then
-							If m_state = EThreadState.Idle Then
-								m_state = EThreadState.ProcessStarting
-							End If
-						Else
-							m_state = EThreadState.Idle
-						End If
-					Else
-						System.Threading.Thread.Sleep(m_monitorInterval)
-					End If
-				Catch ex As Exception
-					' Do not write a log entry if the message is "Thread was being aborted"
-					If Not ex.Message.StartsWith("Thread was being aborted") Then
-						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error waiting to restart process '" & m_StrKeyName & "': " & ex.Message)
-					End If
-					m_state = EThreadState.ProcessBroken
-					Exit Sub
-				End Try
-			Else
-				System.Threading.Thread.Sleep(m_monitorInterval)
-			End If
-		Loop
-		m_state = EThreadState.No
-		clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Thread stopped: " & m_StrKeyName)
-	End Sub
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Thread started: " & m_KeyName)
+        Do
+            If m_ThreadStopCommand = True Then
+                Exit Do
+            End If
 
-	Private Sub UpdateThreadParameters(ByVal blnUpdateRepeatAndHoldoffOnly As Boolean)
-		Static blnWarnedInvalidRepeatMode As Boolean
-		Static blnWarnedInvalidHoldoffInterval As Boolean
+            If mUpdateRequired Then
+                ' Parameters have changed; update them
+                mUpdateRequired = False
 
-		Try
-			Monitor.Enter(oSync)
+                m_state = eThreadState.Idle
+                UpdateThreadParameters(False)
+            End If
 
-			If StrNewProgramName Is Nothing Then StrNewProgramName = String.Empty
-			If StrNewProgramArguments Is Nothing Then StrNewProgramArguments = String.Empty
-			If StrNewRepeat Is Nothing Then StrNewRepeat = String.Empty
-			If StrNewHoldoff Is Nothing Then StrNewHoldoff = String.Empty
+            If m_state = eThreadState.ProcessStarting Then
+                Try
+                    If String.IsNullOrWhiteSpace(m_ProgramInfo.ProgramPath) Then
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error running process '" & m_KeyName & "': empty program path")
+                        m_state = eThreadState.ProcessBroken
+                        Exit Sub
+                    End If
 
-			' Make sure the first letter of StrNewRepeat is capitalized and the other letters are lowercase
-			StrNewRepeat = CapitalizeMode(StrNewRepeat)
+                    With m_Process.StartInfo
+                        .FileName = m_ProgramInfo.ProgramPath
+                        .WorkingDirectory = m_WorkDir
+                        .Arguments = m_ProgramInfo.ProgramArguments
+                        .CreateNoWindow = m_CreateNoWindow
+                        If .CreateNoWindow Then
+                            .WindowStyle = ProcessWindowStyle.Hidden
+                        Else
+                            .WindowStyle = m_WindowStyle
+                        End If
+                    End With
+                    m_Process.Start()
+                    m_state = eThreadState.ProcessRunning
+                    m_pid = m_Process.Id
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Started: " & m_KeyName & ", pID=" & m_pid.ToString)
 
-			If Not blnUpdateRepeatAndHoldoffOnly Then
-				If StrNewProgramName.Length = 0 Then
-					m_state = EThreadState.ProcessBroken
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Process '" & m_StrKeyName & "' failed due to empty program name")
-				End If
+                    While Not (m_ThreadStopCommand Or m_Process.HasExited)
+                        m_Process.WaitForExit(m_monitorInterval)
+                    End While
 
-				If Not System.IO.File.Exists(StrNewProgramName) Then
-					m_state = EThreadState.ProcessBroken
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Process '" & m_StrKeyName & "' failed due to missing program file: " & StrNewProgramName)
-				End If
-			End If
+                    If m_ThreadStopCommand = True Then
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Stopped: " & m_KeyName)
+                        Exit Do
+                    Else
+                        If m_ProgramInfo.RepeatMode = "Repeat" Then
+                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Waiting: " & m_KeyName)
+                        Else
+                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Stopped: " & m_KeyName)
+                        End If
+                    End If
+                Catch ex As Exception
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error running process '" & m_KeyName & "': " & ex.Message)
+                    m_state = eThreadState.ProcessBroken
+                    Exit Sub
+                End Try
 
+                Try
+                    m_pid = 0
+                    m_ExitCode = m_Process.ExitCode
+                    m_Process.Close()
+                    m_state = eThreadState.Idle
+                    If m_ProgramInfo.RepeatMode = "Repeat" Then
+                        ' Process has exited; but its mode is repeat
+                        ' Wait for m_Holdoff seconds, then set m_state to eThreadState.ProcessStarting
 
-			If (StrNewRepeat = "Repeat" OrElse StrNewRepeat = "Once" OrElse StrNewRepeat = "No") Then
-				blnWarnedInvalidRepeatMode = False
-			Else
-				If blnUpdateRepeatAndHoldoffOnly Then
-					' Only updating the Repeat and Holdoff values
-					' Log the error (if not yet logged)
-					If Not blnWarnedInvalidRepeatMode Then
-						blnWarnedInvalidRepeatMode = True
-						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Invalid ""run"" value for process '" & m_StrKeyName & "': " & StrNewRepeat & "; valid values are Repeat, Once, and Off")
-					End If
-					StrNewRepeat = m_StrRepeat
-				Else
-					m_state = EThreadState.ProcessBroken
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Process '" & m_StrKeyName & "' failed due to incorrect ""run"" value of '" & StrNewRepeat & "'; valid values are Repeat, Once, and Off")
-				End If
-			End If
+                        Dim dtHoldoffStartTime = DateTime.UtcNow
+                        Do
+                            Thread.Sleep(REPEAT_HOLDOFF_SLEEP_TIME_MSEC)
 
-			Dim sngNewHoldOff As Single = m_monitorInterval
-			If System.Single.TryParse(StrNewHoldoff, sngNewHoldOff) Then
-				blnWarnedInvalidHoldoffInterval = False
-			Else
-				If blnUpdateRepeatAndHoldoffOnly Then
-					' Only updating the Repeat and Holdoff values
-					' Log the error (if not yet logged)
-					If Not blnWarnedInvalidHoldoffInterval Then
-						blnWarnedInvalidHoldoffInterval = True
-						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Invalid ""Holdoff"" value for process '" & m_StrKeyName & "': " & StrNewHoldoff & "; this value must be an integer (defining the holdoff time, in seconds)")
-					End If
-					sngNewHoldOff = m_Holdoff
-				Else
-					m_state = EThreadState.ProcessBroken
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Process '" & m_StrKeyName & "' failed due to incorrect ""Holdoff"" value of '" & StrNewHoldoff & "'; this value must be an integer (defining the holdoff time, in seconds)")
-				End If
-			End If
+                            If mUpdateRequired Then
+                                ' Update the current values for m_ProgramInfo.RepeatMode and m_ProgramInfo.HoldoffSeconds
+                                ' However, don't set mUpdateRequired to False since we're not updating the other parameters
+                                UpdateThreadParameters(True)
 
-			If Not blnUpdateRepeatAndHoldoffOnly Then
-				If m_state = EThreadState.Idle Then
-					If StrNewRepeat = "Repeat" Then
-						m_state = EThreadState.ProcessStarting
-					ElseIf StrNewRepeat = "Once" Then
-						If m_StrProgramName <> StrNewProgramName Then
-							m_state = EThreadState.ProcessStarting
-						ElseIf m_StrProgramArguments <> StrNewProgramArguments Then
-							m_state = EThreadState.ProcessStarting
-						Else
-							If m_StrRepeat = "No" Or m_StrRepeat = "Repeat" Then
-								m_state = EThreadState.ProcessStarting
-							Else
-								If m_Holdoff <> sngNewHoldOff Then
-									m_state = EThreadState.ProcessStarting
-								End If
-							End If
-						End If
-					End If
-				End If
-			End If
+                                If m_ProgramInfo.RepeatMode <> "Repeat" Then Exit Do
+                            End If
+                        Loop While DateTime.UtcNow.Subtract(dtHoldoffStartTime).TotalSeconds < m_ProgramInfo.HoldoffSeconds
+
+                        If m_ProgramInfo.RepeatMode = "Repeat" Then
+                            If m_state = eThreadState.Idle Then
+                                m_state = eThreadState.ProcessStarting
+                            End If
+                        Else
+                            m_state = eThreadState.Idle
+                        End If
+                    Else
+                        Thread.Sleep(m_monitorInterval)
+                    End If
+                Catch ex1 As ThreadAbortException
+                    m_state = eThreadState.ProcessBroken
+                    Exit Sub
+                Catch ex2 As Exception
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error waiting to restart process '" & m_KeyName & "': " & ex2.Message)
+                    m_state = eThreadState.ProcessBroken
+                    Exit Sub
+                End Try
+            Else
+                Thread.Sleep(m_monitorInterval)
+            End If
+        Loop
+        m_state = eThreadState.No
+        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Thread stopped: " & m_KeyName)
+    End Sub
+
+    Private Sub UpdateThreadParameters(ByVal blnUpdateRepeatAndHoldoffOnly As Boolean)
+        Static blnWarnedInvalidRepeatMode As Boolean
+
+        Try
+            Monitor.Enter(oSync)
+
+            With m_NewProgramInfo
+                If String.IsNullOrWhiteSpace(.ProgramPath) Then .ProgramPath = String.Empty
+                If String.IsNullOrWhiteSpace(.ProgramArguments) Then .ProgramArguments = String.Empty
+                If String.IsNullOrWhiteSpace(.RepeatMode) Then .RepeatMode = "No"
+                If .HoldoffSeconds < 1 Then .HoldoffSeconds = 1
+            End With
+
+            ' Make sure the first letter of StrNewRepeat is capitalized and the other letters are lowercase
+            m_NewProgramInfo.RepeatMode = CapitalizeMode(m_NewProgramInfo.RepeatMode)
+
+            If Not blnUpdateRepeatAndHoldoffOnly Then
+                If String.IsNullOrWhiteSpace(m_NewProgramInfo.ProgramPath) Then
+                    m_state = eThreadState.ProcessBroken
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Process '" & m_KeyName & "' failed due to empty program name")
+                End If
+
+                If Not File.Exists(m_NewProgramInfo.ProgramPath) Then
+                    m_state = eThreadState.ProcessBroken
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Process '" & m_KeyName & "' failed due to missing program file: " & m_NewProgramInfo.ProgramPath)
+                End If
+            End If
 
 
-			m_StrProgramName = StrNewProgramName
-			m_StrProgramArguments = StrNewProgramArguments
-			m_StrRepeat = StrNewRepeat
-			m_Holdoff = sngNewHoldOff
-			m_WorkDir = ""
-			m_CreateNoWindow = False
-			m_ExitCode = -12354	 'Unreasonable value in case I missed setting it somewhere
-			Monitor.Exit(oSync)
-		Catch
-			bUpdate = bUpdate
-		End Try
+            If (m_NewProgramInfo.RepeatMode = "Repeat" OrElse m_NewProgramInfo.RepeatMode = "Once" OrElse m_NewProgramInfo.RepeatMode = "No") Then
+                blnWarnedInvalidRepeatMode = False
+            Else
+                If blnUpdateRepeatAndHoldoffOnly Then
+                    ' Only updating the Repeat and Holdoff values
+                    ' Log the error (if not yet logged)
+                    If Not blnWarnedInvalidRepeatMode Then
+                        blnWarnedInvalidRepeatMode = True
+                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Invalid ""run"" value for process '" & m_KeyName & "': " & m_NewProgramInfo.RepeatMode & "; valid values are Repeat, Once, and No")
+                    End If
+                    m_NewProgramInfo.RepeatMode = m_ProgramInfo.RepeatMode
+                Else
+                    m_state = eThreadState.ProcessBroken
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Process '" & m_KeyName & "' failed due to incorrect ""run"" value of '" & m_NewProgramInfo.RepeatMode & "'; valid values are Repeat, Once, and No")
+                End If
+            End If
 
-	End Sub
+            If Not blnUpdateRepeatAndHoldoffOnly Then
+                If m_state = eThreadState.Idle Then
+                    If m_NewProgramInfo.RepeatMode = "Repeat" Then
+                        m_state = eThreadState.ProcessStarting
+                    ElseIf m_NewProgramInfo.RepeatMode = "Once" Then
+                        If m_ProgramInfo.ProgramPath <> m_NewProgramInfo.ProgramPath Then
+                            m_state = eThreadState.ProcessStarting
+                        ElseIf m_ProgramInfo.ProgramArguments <> m_NewProgramInfo.ProgramArguments Then
+                            m_state = eThreadState.ProcessStarting
+                        Else
+                            If m_ProgramInfo.RepeatMode = "No" OrElse m_ProgramInfo.RepeatMode = "Repeat" Then
+                                m_state = eThreadState.ProcessStarting
+                            Else
+                                If m_ProgramInfo.HoldoffSeconds <> m_NewProgramInfo.HoldoffSeconds Then
+                                    m_state = eThreadState.ProcessStarting
+                                End If
+                            End If
+                        End If
+                    End If
+                End If
+            End If
+
+            m_ProgramInfo.ProgramPath = m_NewProgramInfo.ProgramPath
+            m_ProgramInfo.ProgramArguments = m_NewProgramInfo.ProgramArguments
+            m_ProgramInfo.RepeatMode = m_NewProgramInfo.RepeatMode
+            m_ProgramInfo.HoldoffSeconds = m_NewProgramInfo.HoldoffSeconds
+
+            m_ExitCode =0
+            Monitor.Exit(oSync)
+        Catch
+            mUpdateRequired = mUpdateRequired
+        End Try
+
+    End Sub
 
 End Class
