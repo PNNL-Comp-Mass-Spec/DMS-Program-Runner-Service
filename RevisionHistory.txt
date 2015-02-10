@@ -1,5 +1,8 @@
 Program Runner (MultiProgRunner) Revision History
 
+Version 1.2.5519; February 10, 2015
+	- Updated log4net to 1.2.13
+
 Version 1.2.5017; September 26, 2013
 	- Updated to .NET 4
 

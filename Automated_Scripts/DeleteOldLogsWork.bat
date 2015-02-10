@@ -3,7 +3,7 @@
 echo %1
 pushd %1
 
-if not exist Logs goto Done
+if not exist Logs goto DoneMoving
 
 cd Logs
 
@@ -41,6 +41,5 @@ FOR /L %%G IN (1,1,9) DO (
     del Progrunner_0%%G-3?-????.txt
 )
 
+:DoneMoving
 popd
-
-:Done
