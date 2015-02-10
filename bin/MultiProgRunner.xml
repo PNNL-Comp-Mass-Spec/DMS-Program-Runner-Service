@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<section>
+<sections>
 	<section name="programs">
-		<item key="Andrei" value="C:\temp\calc.exe" arguments="" run="Once" holdoff="5" />
-		<item key="Robert" value="c:\temp\Notepad.exe" arguments="c:\temp\Test.txt" run="Once" holdoff="5" /> 
-  		<item key="Samuel" value="c:\temp\WinMine.exe" arguments="" run="Repeat" holdoff="10" /> 
+		<item key="Calculator" value="C:\Windows\system32\calc.exe" arguments="" run="Repeat" holdoff="5" />
+		<item key="Paint" value="C:\Windows\system32\mspaint.exe" arguments="" run="Repeat" holdoff="10" /> 
 	</section>
-</section>
-
+	<section name="programs_Disabled">
+		<item key="Notepad" value="C:\Windows\system32\notepad.exe" arguments="c:\temp\Test.txt" run="Once" holdoff="8" /> 
+	</section>
+</sections>
 
