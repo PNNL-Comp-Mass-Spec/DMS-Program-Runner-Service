@@ -12,7 +12,7 @@
     Public Property RepeatMode As String
     Public Property HoldoffSeconds As Integer
 
-    Public Sub New(ByVal uniqueKeyText As String)
+    Public Sub New(uniqueKeyText As String)
         m_UniqueKey = uniqueKeyText
     End Sub
 

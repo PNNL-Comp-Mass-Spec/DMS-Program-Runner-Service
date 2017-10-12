@@ -3,15 +3,14 @@ Imports System.Threading
 Imports System.Windows.Forms
 Imports System.Collections.Generic
 Imports System.Xml
-Imports System
 
 Public Class clsMainProg
-	Private Const SETTINGS_FILE_UPDATE_DELAY_MSEC As Integer = 1500
+    Private Const SETTINGS_FILE_UPDATE_DELAY_MSEC As Integer = 1500
 
-	Private Const m_IniFileName As String = "MultiProgRunner.xml"
+    Private Const m_IniFileName As String = "MultiProgRunner.xml"
     Private ReadOnly m_IniFileNamePath As String = String.Empty
 
-	Private WithEvents m_FileWatcher As New FileSystemWatcher()
+    Private WithEvents m_FileWatcher As New FileSystemWatcher()
 
     ''' <summary>
     ''' Keys are the program name; values are the ProcessRunner object
@@ -44,7 +43,7 @@ Public Class clsMainProg
 
             m_ProgRunners.Clear()
 
-            mUpdateSettingsRequestTime = System.DateTime.UtcNow
+            mUpdateSettingsRequestTime = DateTime.UtcNow
             mSettingsFileUpdateTimer = New Timers.Timer(250)
             mSettingsFileUpdateTimer.Start()
 
@@ -57,7 +56,7 @@ Public Class clsMainProg
         UpdateProgRunnersFromFile(False)
     End Sub
 
-    Private Sub UpdateProgRunnersFromFile(ByVal blnPassXMLFileParsingExceptionsToCaller As Boolean)
+    Private Sub UpdateProgRunnersFromFile(blnPassXMLFileParsingExceptionsToCaller As Boolean)
 
         Dim lstProgramSettings As List(Of clsProcessSettings)
 
@@ -100,7 +99,7 @@ Public Class clsMainProg
             Try
                 If Not m_ProgRunners.ContainsKey(uniqueProgramKey) Then
                     ' New entry
-                    Dim oCProcessRunner As clsProcessRunner = New clsProcessRunner(oProcessSettings)
+                    Dim oCProcessRunner = New clsProcessRunner(oProcessSettings)
                     lstProgRunners.Add(uniqueProgramKey, True)
 
                     m_ProgRunners.Add(uniqueProgramKey, oCProcessRunner)
@@ -132,12 +131,12 @@ Public Class clsMainProg
             Dim lstProcessesToStop As New List(Of String)
 
             For Each progRunnerEntry As KeyValuePair(Of String, clsProcessRunner) In m_ProgRunners
-                Dim enabled As Boolean = False
+                Dim enabled = False
                 If lstProgRunners.TryGetValue(progRunnerEntry.Key, enabled) Then
                     If Not enabled Then
                         lstProcessesToStop.Add(progRunnerEntry.Key)
                     End If
-                End If                
+                End If
             Next
 
             For Each uniqueProgramKey In lstProcessesToStop
@@ -170,15 +169,15 @@ Public Class clsMainProg
         End Try
     End Sub
 
-    Private Sub m_FileWatcher_Changed(ByVal sender As Object, ByVal e As FileSystemEventArgs) Handles m_FileWatcher.Changed
+    Private Sub m_FileWatcher_Changed(sender As Object, e As FileSystemEventArgs) Handles m_FileWatcher.Changed
         mUpdateSettingsFromFile = True
         mUpdateSettingsRequestTime = DateTime.UtcNow
     End Sub
 
     Private Sub UpdateSettingsFromFile()
-        Const MAX_READ_ATTEMPTS As Integer = 3
+        Const MAX_READ_ATTEMPTS = 3
 
-        For iTime As Integer = 1 To MAX_READ_ATTEMPTS
+        For iTime = 1 To MAX_READ_ATTEMPTS
             clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "File changed")
 
             'When file was written program gets few events.
@@ -206,10 +205,10 @@ Public Class clsMainProg
     ''' <param name="strIniFilePath"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function GetProcesses(ByVal strIniFilePath As String) As List(Of clsProcessSettings)
+    Private Function GetProcesses(strIniFilePath As String) As List(Of clsProcessSettings)
         Dim lstProgramSettings As New List(Of clsProcessSettings)
 
-        Dim strSectionName As String = ""
+        Dim strSectionName = ""
 
         Using oReader = XmlReader.Create(New FileStream(strIniFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 
@@ -236,7 +235,7 @@ Public Class clsMainProg
 
                         If oReader.Depth = 2 AndAlso strSectionName = "programs" AndAlso oReader.Name = "item" Then
 
-                            Dim strKeyName As String = ""
+                            Dim strKeyName = ""
 
                             Try
 
@@ -246,11 +245,11 @@ Public Class clsMainProg
                                     clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Empty key name; ignoring entry")
                                 End If
 
-                                Dim oProgramSettings As clsProcessSettings = New clsProcessSettings(strKeyName)
-
-                                oProgramSettings.ProgramPath = GetAttributeSafe(oReader, "value")
-                                oProgramSettings.ProgramArguments = GetAttributeSafe(oReader, "arguments")
-                                oProgramSettings.RepeatMode = GetAttributeSafe(oReader, "run", "Once")
+                                Dim oProgramSettings = New clsProcessSettings(strKeyName) With {
+                                    .ProgramPath = GetAttributeSafe(oReader, "value"),
+                                    .ProgramArguments = GetAttributeSafe(oReader, "arguments"),
+                                    .RepeatMode = GetAttributeSafe(oReader, "run", "Once")
+                                }
 
                                 Dim holdOffSecondsText = GetAttributeSafe(oReader, "holdoff", "10")
                                 Dim holdOffSeconds As Integer
@@ -287,25 +286,25 @@ Public Class clsMainProg
 
     End Function
 
-	Private Function GetAttributeSafe(ByVal oCXmlReader As XmlReader, ByVal strAttributeName As String) As String
-		Return GetAttributeSafe(oCXmlReader, strAttributeName, String.Empty)
-	End Function
+    Private Function GetAttributeSafe(oCXmlReader As XmlReader, strAttributeName As String) As String
+        Return GetAttributeSafe(oCXmlReader, strAttributeName, String.Empty)
+    End Function
 
-	Private Function GetAttributeSafe(ByVal oCXmlReader As XmlReader, ByVal strAttributeName As String, ByVal strDefaultValue As String) As String
+    Private Function GetAttributeSafe(oCXmlReader As XmlReader, strAttributeName As String, strDefaultValue As String) As String
 
         Dim strValue As String
 
-		Try
-			strValue = oCXmlReader.GetAttribute(strAttributeName)
-			If strValue Is Nothing Then strValue = strDefaultValue
-		Catch ex As Exception
-			strValue = strDefaultValue
-		End Try
+        Try
+            strValue = oCXmlReader.GetAttribute(strAttributeName)
+            If strValue Is Nothing Then strValue = strDefaultValue
+        Catch ex As Exception
+            strValue = strDefaultValue
+        End Try
 
-		Return strValue
-	End Function
+        Return strValue
+    End Function
 
-    Private Sub mSettingsFileUpdateTimer_Elapsed(ByVal sender As Object, ByVal e As Timers.ElapsedEventArgs) Handles mSettingsFileUpdateTimer.Elapsed
+    Private Sub mSettingsFileUpdateTimer_Elapsed(sender As Object, e As Timers.ElapsedEventArgs) Handles mSettingsFileUpdateTimer.Elapsed
         If mUpdateSettingsFromFile Then
             If DateTime.UtcNow.Subtract(mUpdateSettingsRequestTime).TotalMilliseconds >= SETTINGS_FILE_UPDATE_DELAY_MSEC Then
                 mUpdateSettingsFromFile = False

@@ -2,16 +2,15 @@ Option Strict On
 
 Imports System.Threading
 Imports System.IO
-Imports System.Diagnostics
 
 ''' <summary>
-''' This class runs a single program as an external process and monitors it with an internal thread. 
+''' This class runs a single program as an external process and monitors it with an internal thread.
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsProcessRunner
 
-    ''' <summary> 
-    ''' Thread states. 
+    ''' <summary>
+    ''' Thread states.
     ''' </summary>
     Public Enum eThreadState
         No
@@ -33,23 +32,23 @@ Public Class clsProcessRunner
     End Property
 
     ''' <summary>
-    ''' Used to start and monitor the external program. 
+    ''' Used to start and monitor the external program.
     ''' </summary>
     ''' <remarks></remarks>
     Private ReadOnly m_Process As New Process
 
-    ''' <summary> 
-    ''' The process id of the currently running incarnation of the external program. 
+    ''' <summary>
+    ''' The process id of the currently running incarnation of the external program.
     ''' </summary>
     Private m_pid As Integer
 
     ''' <summary>
-    ''' The internal thread used to run the monitoring code. That starts and monitors the external program. 
+    ''' The internal thread used to run the monitoring code. That starts and monitors the external program.
     ''' </summary>
     Private m_Thread As Thread
 
     ''' <summary>
-    ''' Flag that tells internal thread to quit monitoring external program and exit. 
+    ''' Flag that tells internal thread to quit monitoring external program and exit.
     ''' </summary>
     Private m_ThreadStopCommand As Boolean = False
 
@@ -120,21 +119,21 @@ Public Class clsProcessRunner
 
     Private mUpdateRequired As Boolean = False
 
-    ''' <summary> 
+    ''' <summary>
     ''' How often (milliseconds) internal monitoring thread checks status of external program.
     ''' </summary>
     Public Property MonitoringInterval() As Integer
         Get
             Return m_monitorInterval
         End Get
-        Set(ByVal Value As Integer)
+        Set(Value As Integer)
             If Value < 100 Then Value = 100
             m_monitorInterval = Value
         End Set
     End Property
 
-    ''' <summary> 
-    ''' Process id of currently running external program's process. 
+    ''' <summary>
+    ''' Process id of currently running external program's process.
     ''' </summary>
     Public ReadOnly Property PID() As Integer
         Get
@@ -142,8 +141,8 @@ Public Class clsProcessRunner
         End Get
     End Property
 
-    ''' <summary> 
-    ''' Current state of prog runner (as number). 
+    ''' <summary>
+    ''' Current state of prog runner (as number).
     ''' </summary>
     Public ReadOnly Property State() As eThreadState
         Get
@@ -151,8 +150,8 @@ Public Class clsProcessRunner
         End Get
     End Property
 
-    ''' <summary> 
-    ''' Exit code when process completes. 
+    ''' <summary>
+    ''' Exit code when process completes.
     ''' </summary>
     Public ReadOnly Property ExitCode() As Integer
         Get
@@ -160,8 +159,8 @@ Public Class clsProcessRunner
         End Get
     End Property
 
-    ''' <summary> 
-    ''' Working directory for process execution. 
+    ''' <summary>
+    ''' Working directory for process execution.
     ''' </summary>
     Public ReadOnly Property WorkDir() As String
         Get
@@ -169,8 +168,8 @@ Public Class clsProcessRunner
         End Get
     End Property
 
-    ''' <summary> 
-    ''' Determine if window should be displayed. 
+    ''' <summary>
+    ''' Determine if window should be displayed.
     ''' </summary>
     Public ReadOnly Property CreateNoWindow() As Boolean
         Get
@@ -178,8 +177,8 @@ Public Class clsProcessRunner
         End Get
     End Property
 
-    ''' <summary> 
-    ''' Window style to use when CreateNoWindow is False. 
+    ''' <summary>
+    ''' Window style to use when CreateNoWindow is False.
     ''' </summary>
     Public ReadOnly Property WindowStyle() As ProcessWindowStyle
         Get
@@ -192,7 +191,7 @@ Public Class clsProcessRunner
     ''' </summary>
     ''' <param name="processSettings">Process settings</param>
     ''' <remarks></remarks>
-    Public Sub New(ByVal processSettings As clsProcessSettings)
+    Public Sub New(processSettings As clsProcessSettings)
         Initialize(processSettings, m_WorkDir, ProcessWindowStyle.Normal, False)
     End Sub
 
@@ -202,7 +201,7 @@ Public Class clsProcessRunner
     ''' <param name="processSettings">Process settings</param>
     ''' <param name="workingDirectory">Working directory path</param>
     ''' <remarks></remarks>
-    Public Sub New(ByVal processSettings As clsProcessSettings, ByVal workingDirectory As String)
+    Public Sub New(processSettings As clsProcessSettings, workingDirectory As String)
         Initialize(processSettings, workingDirectory, ProcessWindowStyle.Normal, False)
     End Sub
 
@@ -214,9 +213,9 @@ Public Class clsProcessRunner
     ''' <param name="bCreateNoWindow">True to create no window, false to use a normal window</param>
     ''' <remarks></remarks>
     Public Sub New(
-      ByVal processSettings As clsProcessSettings,
-      ByVal workingDirectory As String,
-      ByVal bCreateNoWindow As Boolean)
+      processSettings As clsProcessSettings,
+      workingDirectory As String,
+      bCreateNoWindow As Boolean)
         Initialize(processSettings, workingDirectory, ProcessWindowStyle.Normal, bCreateNoWindow)
     End Sub
 
@@ -229,18 +228,18 @@ Public Class clsProcessRunner
     ''' <param name="bCreateNoWindow">True to create no window, false to use windowStyle</param>
     ''' <remarks></remarks>
     Public Sub New(
-      ByVal processSettings As clsProcessSettings,
-      ByVal workingDirectory As String,
-      ByVal eWindowStyle As ProcessWindowStyle,
-      ByVal bCreateNoWindow As Boolean)
+      processSettings As clsProcessSettings,
+      workingDirectory As String,
+      eWindowStyle As ProcessWindowStyle,
+      bCreateNoWindow As Boolean)
         Initialize(processSettings, workingDirectory, eWindowStyle, bCreateNoWindow)
     End Sub
 
     Protected Sub Initialize(
-        ByVal processSettings As clsProcessSettings,
-        ByVal workingDirectory As String,
-        ByVal eWindowStyle As ProcessWindowStyle,
-        ByVal bCreateNoWindow As Boolean)
+        processSettings As clsProcessSettings,
+        workingDirectory As String,
+        eWindowStyle As ProcessWindowStyle,
+        bCreateNoWindow As Boolean)
 
         m_state = eThreadState.No
         m_KeyName = processSettings.UniqueKey
@@ -256,12 +255,12 @@ Public Class clsProcessRunner
         StartThread()
     End Sub
 
-    ''' <summary> 
+    ''' <summary>
     ''' Update settings for existing prog runner instance
     ''' </summary>
     ''' <param name="newProgramInfo">New program info</param>
     ''' <remarks>Key name is ignored in newProgramInfo</remarks>
-    Public Sub UpdateProcessParameters(ByVal newProgramInfo As clsProcessSettings)
+    Public Sub UpdateProcessParameters(newProgramInfo As clsProcessSettings)
         Try
             Monitor.Enter(oSync)
             m_NewProgramInfo = newProgramInfo
@@ -272,14 +271,14 @@ Public Class clsProcessRunner
         End Try
     End Sub
 
-    ''' <summary> 
-    ''' Creates a new thread and starts code that runs and monitors a program in it. 
+    ''' <summary>
+    ''' Creates a new thread and starts code that runs and monitors a program in it.
     ''' </summary>
     Public Sub StartThread()
         If m_state = eThreadState.No Then
             Try
-                Dim m_ThreadStart As New ThreadStart(AddressOf Me.ProcessThread)
-                m_Thread = New Thread(m_ThreadStart)
+                m_Thread = New Thread(AddressOf Me.ProcessThread)
+                m_Thread.SetApartmentState(ApartmentState.STA)
                 m_Thread.Start()
             Catch ex As Exception
                 m_state = eThreadState.ProcessBroken
@@ -288,8 +287,8 @@ Public Class clsProcessRunner
         End If
     End Sub
 
-    ''' <summary> 
-    ''' Causes monitoring thread to exit on its next monitoring cycle. 
+    ''' <summary>
+    ''' Causes monitoring thread to exit on its next monitoring cycle.
     ''' </summary>
     Public Sub StopThread()
         If m_state = eThreadState.ProcessBroken Or m_state = eThreadState.No Then
@@ -332,7 +331,7 @@ Public Class clsProcessRunner
         End If
     End Sub
 
-    Private Function CapitalizeMode(ByVal strMode As String) As String
+    Private Function CapitalizeMode(strMode As String) As String
 
         If strMode Is Nothing Then
             strMode = String.Empty
@@ -348,8 +347,8 @@ Public Class clsProcessRunner
 
     End Function
 
-    ''' <summary> 
-    ''' Start program as external process and monitor its state. 
+    ''' <summary>
+    ''' Start program as external process and monitor its state.
     ''' </summary>
     Private Sub ProcessThread()
         Const REPEAT_HOLDOFF_SLEEP_TIME_MSEC As Integer = 1000
@@ -460,7 +459,7 @@ Public Class clsProcessRunner
         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Thread stopped: " & m_KeyName)
     End Sub
 
-    Private Sub UpdateThreadParameters(ByVal blnUpdateRepeatAndHoldoffOnly As Boolean)
+    Private Sub UpdateThreadParameters(blnUpdateRepeatAndHoldoffOnly As Boolean)
         Static blnWarnedInvalidRepeatMode As Boolean
 
         Try
@@ -533,7 +532,7 @@ Public Class clsProcessRunner
             m_ProgramInfo.RepeatMode = m_NewProgramInfo.RepeatMode
             m_ProgramInfo.HoldoffSeconds = m_NewProgramInfo.HoldoffSeconds
 
-            m_ExitCode =0
+            m_ExitCode = 0
             Monitor.Exit(oSync)
         Catch
             mUpdateRequired = mUpdateRequired
