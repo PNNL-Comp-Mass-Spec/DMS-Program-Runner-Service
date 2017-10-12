@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sections>
 	<section name="programs">
-		<item key="Calculator" value="C:\Windows\system32\calc.exe" arguments="" run="Repeat" holdoff="5" />
-		<item key="Paint" value="C:\Windows\system32\mspaint.exe" arguments="" run="Repeat" holdoff="10" /> 
+        <item key="MsFileInfoScanner"  value="C:\Temp\QC_Test\CreatePlots.bat" arguments="" run="Repeat" holdoff="60" />
 	</section>
 	<section name="programs_Disabled">
+		<item key="Calculator" value="C:\Windows\system32\calc.exe" arguments="" run="Repeat" holdoff="5" />
+		<item key="Paint" value="C:\Windows\system32\mspaint.exe" arguments="" run="Repeat" holdoff="10" /> 
 		<item key="Notepad" value="C:\Windows\system32\notepad.exe" arguments="c:\temp\Test.txt" run="Once" holdoff="8" /> 
 	</section>
 </sections>

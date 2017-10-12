@@ -12,8 +12,8 @@ Module modMain
         'Start the service running
         MyProgRunner.StartAllProgRunners()
 
-        ' Wait for 10 minutes seconds
-        Thread.Sleep(10 * 60 * 1000)
+        ' Wait for 15 seconds
+        Thread.Sleep(15 * 1000)
 
         'Stop the service
         MyProgRunner.StopAllProgRunners()
