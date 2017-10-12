@@ -1,5 +1,8 @@
 Program Runner (MultiProgRunner) Revision History
 
+Version 1.2.6494; October 12, 2017
+	- Automatically move old log files into a year-based folder
+
 Version 1.2.5519; February 10, 2015
 	- Updated log4net to 1.2.13
 
