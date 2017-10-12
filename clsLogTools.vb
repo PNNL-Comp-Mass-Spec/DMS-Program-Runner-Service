@@ -114,7 +114,11 @@ Public Class clsLogTools
     ''' System event log logger
     ''' </summary>
     Private Shared ReadOnly m_SysLogger As ILog = LogManager.GetLogger("SysLogger")
+
+    Private Shared m_LastCheckOldLogs As DateTime = DateTime.UtcNow.AddDays(-1)
+
     Private Shared m_MostRecentErrorMessage As String = String.Empty
+
 #End Region
 
 #Region "Properties"
@@ -240,6 +244,22 @@ Public Class clsLogTools
             m_MostRecentErrorMessage = message
         End If
 
+        If DateTime.UtcNow.Subtract(m_LastCheckOldLogs).TotalHours > 24 Then
+            m_LastCheckOldLogs = DateTime.UtcNow
+
+            Dim curLogger = TryCast(m_FileLogger.Logger, Repository.Hierarchy.Logger)
+            If curLogger Is Nothing Then Exit Sub
+
+            For Each item In curLogger.Appenders
+                Dim curAppender = TryCast(item, FileAppender)
+                If curLogger Is Nothing Then Continue For
+
+                ArchiveOldLogs(curAppender.File)
+                Exit For
+            Next
+
+        End If
+
     End Sub
 
     ''' <summary>
@@ -341,6 +361,55 @@ Public Class clsLogTools
                 logger.Level = logger.Hierarchy.LevelMap("WARN")
         End Select
     End Sub
+
+    ''' <summary>
+    ''' Look for log files over 32 days old that can be moved into a subdirectory
+    ''' </summary>
+    ''' <param name="logFilePath"></param>
+    Private Shared Sub ArchiveOldLogs(logFilePath As String)
+        Dim targetPath = "??"
+
+        Try
+            Dim currentLogFile = New FileInfo(logFilePath)
+
+            Dim matchSpec = "*_" + LOG_FILE_MATCH_SPEC + LOG_FILE_EXTENSION
+
+            Dim logDirectory = currentLogFile.Directory
+            Dim logFiles = logDirectory.GetFiles(matchSpec)
+
+            Dim matcher = New Regex(LOG_FILE_DATE_REGEX, RegexOptions.Compiled)
+
+            For Each logFile In logFiles
+                Dim match = matcher.Match(logFile.Name)
+
+                If Not match.Success Then
+                    Continue For
+                End If
+
+                Dim logFileYear = Integer.Parse(match.Groups("Year").Value)
+                Dim logFileMonth = Integer.Parse(match.Groups("Month").Value)
+                Dim logFileDay = Integer.Parse(match.Groups("Day").Value)
+
+                Dim logDate = New DateTime(logFileYear, logFileMonth, logFileDay)
+
+                If DateTime.Now.Subtract(logDate).TotalDays <= 32 Then
+                    Continue For
+                End If
+
+                Dim targetDirectory = New DirectoryInfo(Path.Combine(logDirectory.FullName, logFileYear.ToString()))
+                If Not targetDirectory.Exists Then
+                    targetDirectory.Create()
+                End If
+
+                targetPath = Path.Combine(targetDirectory.FullName, logFile.Name)
+
+                logFile.MoveTo(targetPath)
+            Next
+        Catch ex As Exception
+            WriteLog(LoggerTypes.LogFile, LogLevels.[ERROR], "Error moving old log file to " + targetPath, ex)
+        End Try
+    End Sub
+
 #End Region
 
 End Class
