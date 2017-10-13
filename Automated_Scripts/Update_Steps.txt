@@ -20,9 +20,8 @@
 5) Rollout the updated .exe using CopyProgrunner_AllMachines.bat
    Excerpt:
 
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-3\DMS_Programs\MultiProgRunnerSvc\ /Y
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-4\DMS_Programs\MultiProgRunnerSvc\ /Y
-xcopy \\Roadrunnerold\PAST\Software\MultiProgRunnerSvc\ProgRunnerSvc.exe \\proto-5\DMS_Programs\MultiProgRunnerSvc\ /Y
+call CopyProgrunnerWork.bat \\Pub-10\DMS_Programs\MultiProgRunnerSvc\
+call CopyProgrunnerWork.bat \\Pub-11\DMS_Programs\MultiProgRunnerSvc\
 
 6) Start the Progrunner Service using Powershell:
 
