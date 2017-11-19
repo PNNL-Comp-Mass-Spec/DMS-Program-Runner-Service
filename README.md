@@ -45,6 +45,26 @@ C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\installutil /u ProgRunnerSvc.exe
 </sections>
 ```
 
+## Troubleshooting
+
+If the DMS Program Runner has problems running programs, confirm that the RunAs command works.
+
+```
+runas /u:pnl\svc-dms cmd
+Enter the password for pnl\svc-dms:
+Attempting to start cmd as user "pnl\svc-dms" ...
+```
+
+If the command fails with error "Access is denied":
+```
+RUNAS ERROR: Unable to run - cmd
+5: Access is denied.
+```
+
+Try starting the "Secondary Logon Service" and try again.
+In addition, set the "Secondary Logon Service" to start automatically
+
+
 ## Contacts
 
 Written by Dave Clark and Matthew Monroe for the Department of Energy (PNNL, Richland, WA) \
