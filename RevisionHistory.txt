@@ -1,5 +1,9 @@
 Program Runner (MultiProgRunner) Revision History
 
+Version 1.2.6549; December 6, 2017
+	- Synchronize clsLogTools with other projects
+		- Initialize the log file with CreateFileLogger
+
 Version 1.2.6494; October 12, 2017
 	- Automatically move old log files into a year-based folder
 
