@@ -1,7 +1,6 @@
 Imports System.IO
 Imports System.Threading
 Imports System.Windows.Forms
-Imports System.Collections.Generic
 Imports System.Xml
 
 Public Class clsMainProg
@@ -24,15 +23,19 @@ Public Class clsMainProg
     Private mUpdateSettingsRequestTime As DateTime
     Private WithEvents mSettingsFileUpdateTimer As Timers.Timer
 
+    ''' <summary>
+    ''' Constructor
+    ''' </summary>
     Public Sub New()
-        Dim fi As New FileInfo(Application.ExecutablePath)
-        m_IniFileNamePath = Path.Combine(fi.DirectoryName, m_IniFileName)
         Try
+            Dim fi As New FileInfo(Application.ExecutablePath)
+            m_IniFileNamePath = Path.Combine(fi.DirectoryName, m_IniFileName)
 
             Const logFileNameBase = "Logs\ProgRunner"
             clsLogTools.CreateFileLogger(logFileNameBase, clsLogTools.LogLevels.INFO)
 
             clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "MultiProgRunner v" & Application.ProductVersion & " started")
+
             'Set up the FileWatcher to detect setup file changes
             With m_FileWatcher
                 .BeginInit()

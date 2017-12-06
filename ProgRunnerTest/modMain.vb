@@ -4,22 +4,23 @@ Imports System.Threading
 
 
 Module modMain
+
     Sub Main()
-        Dim MyProgRunner As New ProgRunnerSvc.clsMainProg()
+        Dim myProgRunner As New ProgRunnerSvc.clsMainProg()
 
         'clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Start")
 
         'Start the service running
-        MyProgRunner.StartAllProgRunners()
+        myProgRunner.StartAllProgRunners()
 
         ' Wait for 15 seconds
         Thread.Sleep(15 * 1000)
 
         'Stop the service
-        MyProgRunner.StopAllProgRunners()
-        MyProgRunner = Nothing
+        myProgRunner.StopAllProgRunners()
 
         'clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Stop")
 
     End Sub
+
 End Module
