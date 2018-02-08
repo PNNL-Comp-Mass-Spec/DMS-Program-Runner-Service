@@ -1,5 +1,8 @@
 Program Runner (MultiProgRunner) Revision History
 
+Version 1.2.6612; February 7, 2017
+	- Replace Log4net with Logging classes in PRISM.dll
+
 Version 1.2.6549; December 6, 2017
 	- Synchronize clsLogTools with other projects
 		- Initialize the log file with CreateFileLogger

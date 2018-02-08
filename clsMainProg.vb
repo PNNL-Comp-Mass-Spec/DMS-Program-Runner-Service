@@ -37,7 +37,7 @@ Public Class clsMainProg
 
             LogTools.LogMessage("=== MultiProgRunner v" & Application.ProductVersion & " started =====")
 
-            'Set up the FileWatcher to detect setup file changes
+            ' Set up the FileWatcher to detect setup file changes
             With m_FileWatcher
                 .BeginInit()
                 .Path = fi.DirectoryName
@@ -135,7 +135,7 @@ Public Class clsMainProg
         Next
 
         Try
-            'Remove disappeared processes
+            ' Remove disappeared processes
             Dim lstProcessesToStop As New List(Of String)
 
             For Each progRunnerEntry As KeyValuePair(Of String, clsProcessRunner) In m_ProgRunners
@@ -188,8 +188,8 @@ Public Class clsMainProg
         For iTime = 1 To MAX_READ_ATTEMPTS
             LogTools.LogMessage("File changed")
 
-            'When file was written program gets few events.
-            'During some events XML reader can't open file. So use try-catch
+            ' When file was written program gets few events.
+            ' During some events XML reader can't open file. So use try-catch
             Try
                 UpdateProgRunnersFromFile(True)
                 Exit For

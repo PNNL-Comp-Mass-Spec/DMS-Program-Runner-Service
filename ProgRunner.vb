@@ -14,7 +14,7 @@ Public Class ProgRunner
 
     End Sub
 
-    'UserService overrides dispose to clean up the component list.
+    ' UserService overrides dispose to clean up the component list.
     Protected Overloads Overrides Sub Dispose(ByVal disposing As Boolean)
         If disposing Then
             If Not (components Is Nothing) Then
@@ -40,7 +40,7 @@ Public Class ProgRunner
         System.ServiceProcess.ServiceBase.Run(ServicesToRun)
     End Sub
 
-    'Required by the Component Designer
+    ' Required by the Component Designer
     Private components As System.ComponentModel.IContainer
 
     ' NOTE: The following procedure is required by the Component Designer
@@ -60,12 +60,12 @@ Public Class ProgRunner
     Dim MyProgRunner As New ProgRunnerSvc.clsMainProg()
 
     Protected Overrides Sub OnStart(args() As String)
-        'Start the service running
+        ' Start the service running
         MyProgRunner.StartAllProgRunners()
     End Sub
 
     Protected Overrides Sub OnStop()
-        'Stop the service
+        ' Stop the service
         MyProgRunner.StopAllProgRunners()
         MyProgRunner = Nothing
     End Sub
