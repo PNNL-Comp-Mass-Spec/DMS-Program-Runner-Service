@@ -2,6 +2,7 @@ Option Strict On
 
 Imports System.Threading
 Imports System.IO
+Imports PRISM.Logging
 
 ''' <summary>
 ''' This class runs a single program as an external process and monitors it with an internal thread.
@@ -122,11 +123,11 @@ Public Class clsProcessRunner
     ''' <summary>
     ''' How often (milliseconds) internal monitoring thread checks status of external program.
     ''' </summary>
-    Public Property MonitoringInterval() As Integer
+    Public Property MonitoringInterval As Integer
         Get
             Return m_monitorInterval
         End Get
-        Set(Value As Integer)
+        Set
             If Value < 100 Then Value = 100
             m_monitorInterval = Value
         End Set
@@ -135,7 +136,7 @@ Public Class clsProcessRunner
     ''' <summary>
     ''' Process id of currently running external program's process.
     ''' </summary>
-    Public ReadOnly Property PID() As Integer
+    Public ReadOnly Property PID As Integer
         Get
             Return m_pid
         End Get
@@ -144,7 +145,7 @@ Public Class clsProcessRunner
     ''' <summary>
     ''' Current state of prog runner (as number).
     ''' </summary>
-    Public ReadOnly Property State() As eThreadState
+    Public ReadOnly Property State As eThreadState
         Get
             Return m_state
         End Get
@@ -153,7 +154,7 @@ Public Class clsProcessRunner
     ''' <summary>
     ''' Exit code when process completes.
     ''' </summary>
-    Public ReadOnly Property ExitCode() As Integer
+    Public ReadOnly Property ExitCode As Integer
         Get
             Return m_ExitCode
         End Get
@@ -162,7 +163,7 @@ Public Class clsProcessRunner
     ''' <summary>
     ''' Working directory for process execution.
     ''' </summary>
-    Public ReadOnly Property WorkDir() As String
+    Public ReadOnly Property WorkDir As String
         Get
             Return m_WorkDir
         End Get
@@ -171,7 +172,7 @@ Public Class clsProcessRunner
     ''' <summary>
     ''' Determine if window should be displayed.
     ''' </summary>
-    Public ReadOnly Property CreateNoWindow() As Boolean
+    Public ReadOnly Property CreateNoWindow As Boolean
         Get
             Return m_CreateNoWindow
         End Get
@@ -180,7 +181,7 @@ Public Class clsProcessRunner
     ''' <summary>
     ''' Window style to use when CreateNoWindow is False.
     ''' </summary>
-    Public ReadOnly Property WindowStyle() As ProcessWindowStyle
+    Public ReadOnly Property WindowStyle As ProcessWindowStyle
         Get
             Return m_WindowStyle
         End Get
@@ -282,7 +283,7 @@ Public Class clsProcessRunner
                 m_Thread.Start()
             Catch ex As Exception
                 m_state = eThreadState.ProcessBroken
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to create thread: " & m_KeyName)
+                LogTools.LogError("Failed to create thread: " & m_KeyName, ex)
             End Try
         End If
     End Sub
@@ -297,35 +298,35 @@ Public Class clsProcessRunner
 
         m_ThreadStopCommand = True
         If m_state = eThreadState.ProcessRunning Then
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Try to kill process: " & m_KeyName)
+            LogTools.LogMessage("Try to kill process: " & m_KeyName)
             Try
                 m_Process.Kill()
-                'Catch ex As System.ComponentModel.Win32Exception
-                'ThrowConditionalException(CType(ex, Exception), "Caught Win32Exception while trying to kill process.")
-                'Catch ex As System.InvalidOperationException
-                'ThrowConditionalException(CType(ex, Exception), "Caught InvalidOperationException while trying to kill thread.")
+                ' Catch ex As System.ComponentModel.Win32Exception
+                ' ThrowConditionalException(CType(ex, Exception), "Caught Win32Exception while trying to kill process.")
+                ' Catch ex As System.InvalidOperationException
+                ' ThrowConditionalException(CType(ex, Exception), "Caught InvalidOperationException while trying to kill thread.")
             Catch ex As Exception
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, "Exception killing process '" & m_KeyName & "': " & ex.Message)
+                LogTools.LogWarning("Exception killing process '" & m_KeyName & "': " & ex.Message)
             End Try
             If Not m_Process.WaitForExit(m_monitorInterval) Then
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to kill process '" & m_KeyName & "'")
+                LogTools.LogError("Failed to kill process '" & m_KeyName & "'")
             Else
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Killed process: " & m_KeyName)
+                LogTools.LogMessage("Killed process: " & m_KeyName)
             End If
         End If
 
         Try
             m_Thread.Join(m_monitorInterval)
         Catch ex As Exception
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to wait while stopping thread '" & m_KeyName & "': " & ex.Message)
+            LogTools.LogError("Failed to wait while stopping thread '" & m_KeyName & "'", ex)
         End Try
 
         If m_Thread.IsAlive() = True Then
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Try to abort thread: " & m_KeyName)
+            LogTools.LogMessage("Try to abort thread: " & m_KeyName)
             Try
                 m_Thread.Abort()
             Catch ex As Exception
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Failed to stop thread '" & m_KeyName & "': " & ex.Message)
+                LogTools.LogError("Failed to stop thread '" & m_KeyName & "'", ex)
             End Try
 
         End If
@@ -351,9 +352,9 @@ Public Class clsProcessRunner
     ''' Start program as external process and monitor its state.
     ''' </summary>
     Private Sub ProcessThread()
-        Const REPEAT_HOLDOFF_SLEEP_TIME_MSEC As Integer = 1000
+        Const REPEAT_HOLDOFF_SLEEP_TIME_MSEC = 1000
 
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Thread started: " & m_KeyName)
+        LogTools.LogMessage("Thread started: " & m_KeyName)
         Do
             If m_ThreadStopCommand = True Then
                 Exit Do
@@ -370,7 +371,7 @@ Public Class clsProcessRunner
             If m_state = eThreadState.ProcessStarting Then
                 Try
                     If String.IsNullOrWhiteSpace(m_ProgramInfo.ProgramPath) Then
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error running process '" & m_KeyName & "': empty program path")
+                        LogTools.LogError("Error running process '" & m_KeyName & "': empty program path")
                         m_state = eThreadState.ProcessBroken
                         Exit Sub
                     End If
@@ -389,24 +390,24 @@ Public Class clsProcessRunner
                     m_Process.Start()
                     m_state = eThreadState.ProcessRunning
                     m_pid = m_Process.Id
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Started: " & m_KeyName & ", pID=" & m_pid.ToString)
+                    LogTools.LogMessage("Started: " & m_KeyName & ", pID=" & m_pid.ToString)
 
                     While Not (m_ThreadStopCommand Or m_Process.HasExited)
                         m_Process.WaitForExit(m_monitorInterval)
                     End While
 
                     If m_ThreadStopCommand = True Then
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Stopped: " & m_KeyName)
+                        LogTools.LogMessage("Stopped: " & m_KeyName)
                         Exit Do
                     Else
                         If m_ProgramInfo.RepeatMode = "Repeat" Then
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Waiting: " & m_KeyName)
+                            LogTools.LogMessage("Waiting: " & m_KeyName)
                         Else
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Stopped: " & m_KeyName)
+                            LogTools.LogMessage("Stopped: " & m_KeyName)
                         End If
                     End If
                 Catch ex As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error running process '" & m_KeyName & "': " & ex.Message)
+                    LogTools.LogError("Error running process '" & m_KeyName & "'", ex)
                     m_state = eThreadState.ProcessBroken
                     Exit Sub
                 End Try
@@ -447,7 +448,7 @@ Public Class clsProcessRunner
                     m_state = eThreadState.ProcessBroken
                     Exit Sub
                 Catch ex2 As Exception
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error waiting to restart process '" & m_KeyName & "': " & ex2.Message)
+                    LogTools.LogError("Error waiting to restart process '" & m_KeyName & "'", ex2)
                     m_state = eThreadState.ProcessBroken
                     Exit Sub
                 End Try
@@ -456,7 +457,7 @@ Public Class clsProcessRunner
             End If
         Loop
         m_state = eThreadState.No
-        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Thread stopped: " & m_KeyName)
+        LogTools.LogMessage("Thread stopped: " & m_KeyName)
     End Sub
 
     Private Sub UpdateThreadParameters(blnUpdateRepeatAndHoldoffOnly As Boolean)
@@ -478,12 +479,12 @@ Public Class clsProcessRunner
             If Not blnUpdateRepeatAndHoldoffOnly Then
                 If String.IsNullOrWhiteSpace(m_NewProgramInfo.ProgramPath) Then
                     m_state = eThreadState.ProcessBroken
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Process '" & m_KeyName & "' failed due to empty program name")
+                    LogTools.LogError("Process '" & m_KeyName & "' failed due to empty program name")
                 End If
 
                 If Not File.Exists(m_NewProgramInfo.ProgramPath) Then
                     m_state = eThreadState.ProcessBroken
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Process '" & m_KeyName & "' failed due to missing program file: " & m_NewProgramInfo.ProgramPath)
+                    LogTools.LogError("Process '" & m_KeyName & "' failed due to missing program file: " & m_NewProgramInfo.ProgramPath)
                 End If
             End If
 
@@ -496,12 +497,12 @@ Public Class clsProcessRunner
                     ' Log the error (if not yet logged)
                     If Not blnWarnedInvalidRepeatMode Then
                         blnWarnedInvalidRepeatMode = True
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Invalid ""run"" value for process '" & m_KeyName & "': " & m_NewProgramInfo.RepeatMode & "; valid values are Repeat, Once, and No")
+                        LogTools.LogError("Invalid ""run"" value for process '" & m_KeyName & "': " & m_NewProgramInfo.RepeatMode & "; valid values are Repeat, Once, and No")
                     End If
                     m_NewProgramInfo.RepeatMode = m_ProgramInfo.RepeatMode
                 Else
                     m_state = eThreadState.ProcessBroken
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Process '" & m_KeyName & "' failed due to incorrect ""run"" value of '" & m_NewProgramInfo.RepeatMode & "'; valid values are Repeat, Once, and No")
+                    LogTools.LogError("Process '" & m_KeyName & "' failed due to incorrect ""run"" value of '" & m_NewProgramInfo.RepeatMode & "'; valid values are Repeat, Once, and No")
                 End If
             End If
 
