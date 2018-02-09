@@ -13,10 +13,15 @@ C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\installutil ProgRunnerSvc.exe
 Once installed, configure the user to run the service as (for example svc-dms).
 Next, set the service to start automatically.
 
+## Updating
+
+To update the DMS Program Runner to a new version, stop the service, 
+update the executable and PRISM.dll, then start the service.
+
 ## Uninstalling
 
 ```
-C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\installutil /u ProgRunnerSvc.exe
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\installutil /u ProgRunnerSvc.exe
 ```
 
 ## Example Configuration File
