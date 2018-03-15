@@ -1,25 +1,24 @@
-﻿Option Strict On
+﻿
+namespace ProgRunnerTest
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            var myProgRunner = new ProgRunnerSvc.clsMainProg();
 
-Imports System.Threading
+            // FileLogger.WriteLog(BaseLogger.LogLevels.INFO, "Start");
 
-Module modMain
+            // Start the service running
+            myProgRunner.StartAllProgRunners();
 
-    Sub Main()
-        Dim myProgRunner As New ProgRunnerSvc.clsMainProg()
+            // Wait for 60 seconds
+            System.Threading.Thread.Sleep(300 * 1000);
 
-        ' FileLogger.WriteLog(BaseLogger.LogLevels.INFO, "Start")
+            // Stop the service
+            myProgRunner.StopAllProgRunners();
 
-        ' Start the service running
-        myProgRunner.StartAllProgRunners()
-
-        ' Wait for 15 seconds
-        Thread.Sleep(15 * 1000)
-
-        ' Stop the service
-        myProgRunner.StopAllProgRunners()
-
-        ' FileLogger.WriteLog(BaseLogger.LogLevels.INFO, "Stop")
-
-    End Sub
-
-End Module
+            // FileLogger.WriteLog(BaseLogger.LogLevels.INFO, "Stop")
+        }
+    }
+}

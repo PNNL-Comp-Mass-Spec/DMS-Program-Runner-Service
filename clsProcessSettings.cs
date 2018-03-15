@@ -1,22 +1,29 @@
-﻿Public Class clsProcessSettings
+﻿
+namespace ProgRunnerSvc
+{
+    class clsProcessSettings
+    {
 
-    Protected m_UniqueKey As String = "Undefined"
-    Public ReadOnly Property UniqueKey As String
-        Get
-            Return m_UniqueKey
-        End Get
-    End Property
+        protected string m_UniqueKey;
 
-    Public Property ProgramPath As String
-    Public Property ProgramArguments As String
-    Public Property RepeatMode As String
-    Public Property HoldoffSeconds As Integer
+        public string UniqueKey => m_UniqueKey;
 
-    Public Sub New(uniqueKeyText As String)
-        m_UniqueKey = uniqueKeyText
-    End Sub
+        public string ProgramPath { get; set; }
+        public string ProgramArguments { get; set; }
+        public string RepeatMode { get; set; }
+        public int HoldoffSeconds  { get; set; }
 
-    Public Overrides Function ToString() As String
-        Return m_UniqueKey
-    End Function
-End Class
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public clsProcessSettings(string uniqueKey)
+        {
+            m_UniqueKey = uniqueKey;
+        }
+
+        public override string ToString()
+        {
+            return m_UniqueKey;
+        }
+    }
+}

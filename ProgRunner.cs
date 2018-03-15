@@ -1,73 +1,33 @@
+﻿using System.ServiceProcess;
 
-Public Class ProgRunner
-    Inherits System.ServiceProcess.ServiceBase
+namespace ProgRunnerSvc
+{
+    public partial class ProgRunner : ServiceBase
+    {
+        private readonly clsMainProg MyProgRunner;
 
-#Region " Component Designer generated code "
+        public ProgRunner()
+        {
+            InitializeComponent();
+            MyProgRunner = new clsMainProg();
+        }
 
-    Public Sub New()
-        MyBase.New()
+        /// <summary>
+        /// Start the service
+        /// </summary>
+        /// <param name="args"></param>
+        protected override void OnStart(string[] args)
+        {
+            MyProgRunner.StartAllProgRunners();
+        }
 
-        ' This call is required by the Component Designer.
-        InitializeComponent()
-
-        ' Add any initialization after the InitializeComponent() call
-
-    End Sub
-
-    ' UserService overrides dispose to clean up the component list.
-    Protected Overloads Overrides Sub Dispose(ByVal disposing As Boolean)
-        If disposing Then
-            If Not (components Is Nothing) Then
-                components.Dispose()
-            End If
-        End If
-        MyBase.Dispose(disposing)
-    End Sub
-
-    ' The main entry point for the process
-    <MTAThread()>
-    Shared Sub Main()
-        Dim ServicesToRun() As System.ServiceProcess.ServiceBase
-
-        ' More than one NT Service may run within the same process. To add
-        ' another service to this process, change the following line to
-        ' create a second service object. For example,
-        '
-        '   ServicesToRun = New System.ServiceProcess.ServiceBase () {New Service1, New MySecondUserService}
-        '
-        ServicesToRun = New System.ServiceProcess.ServiceBase() {New ProgRunner()}
-
-        System.ServiceProcess.ServiceBase.Run(ServicesToRun)
-    End Sub
-
-    ' Required by the Component Designer
-    Private components As System.ComponentModel.IContainer
-
-    ' NOTE: The following procedure is required by the Component Designer
-    ' It can be modified using the Component Designer.
-    ' Do not modify it using the code editor.
-    <System.Diagnostics.DebuggerStepThrough()> Private Sub InitializeComponent()
-        '
-        'ProgRunner
-        '
-        Me.CanShutdown = True
-        Me.ServiceName = "ProgRunner"
-
-    End Sub
-
-#End Region
-
-    Dim MyProgRunner As New ProgRunnerSvc.clsMainProg()
-
-    Protected Overrides Sub OnStart(args() As String)
-        ' Start the service running
-        MyProgRunner.StartAllProgRunners()
-    End Sub
-
-    Protected Overrides Sub OnStop()
-        ' Stop the service
-        MyProgRunner.StopAllProgRunners()
-        MyProgRunner = Nothing
-    End Sub
-
-End Class
+        /// <summary>
+        /// Stop the service
+        /// </summary>
+        protected override void OnStop()
+        {
+            MyProgRunner.StopAllProgRunners();
+            // MyProgRunner.Dispose();
+        }
+    }
+}
