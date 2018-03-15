@@ -18,10 +18,10 @@
 .\ParallelExecuteScript.ps1 -MaxThreads 90 -ScriptFile .\StopProgRunner.ps1 -ComputerList .\Computers.txt
 
 5) Rollout the updated .exe using CopyProgrunner_AllMachines.bat
-   Excerpt:
 
-call CopyProgrunnerWork.bat \\Pub-10\DMS_Programs\MultiProgRunnerSvc\
-call CopyProgrunnerWork.bat \\Pub-11\DMS_Programs\MultiProgRunnerSvc\
+Excerpt:
+call CopyProgrunnerWork.bat Pub-10
+call CopyProgrunnerWork.bat Pub-11
 
 6) Start the Progrunner Service using Powershell:
 
