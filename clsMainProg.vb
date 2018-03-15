@@ -177,34 +177,6 @@ Public Class clsMainProg
         End Try
     End Sub
 
-    Private Sub m_FileWatcher_Changed(sender As Object, e As FileSystemEventArgs) Handles m_FileWatcher.Changed
-        mUpdateSettingsFromFile = True
-        mUpdateSettingsRequestTime = DateTime.UtcNow
-    End Sub
-
-    Private Sub UpdateSettingsFromFile()
-        Const MAX_READ_ATTEMPTS = 3
-
-        For iTime = 1 To MAX_READ_ATTEMPTS
-            LogTools.LogMessage("File changed")
-
-            ' When file was written program gets few events.
-            ' During some events XML reader can't open file. So use try-catch
-            Try
-                UpdateProgRunnersFromFile(True)
-                Exit For
-            Catch ex As Exception
-                If iTime < MAX_READ_ATTEMPTS Then
-                    LogTools.LogError("Error reading XML file (will try again): " & ex.Message)
-                Else
-                    LogTools.LogError("Error reading XML file (tried " & MAX_READ_ATTEMPTS.ToString & " times): " & ex.Message)
-                End If
-            End Try
-
-            Thread.Sleep(1000)
-        Next
-    End Sub
-
     ''' <summary>
     ''' If the XML reader tries to read a file that is being updated, an error can occur
     ''' This function only has Try/Catch blocks when reading specific entries within a section
@@ -311,6 +283,34 @@ Public Class clsMainProg
 
         Return strValue
     End Function
+
+    Private Sub UpdateSettingsFromFile()
+        Const MAX_READ_ATTEMPTS = 3
+
+        For iTime = 1 To MAX_READ_ATTEMPTS
+            LogTools.LogMessage("File changed")
+
+            ' When file was written program gets few events.
+            ' During some events XML reader can't open file. So use try-catch
+            Try
+                UpdateProgRunnersFromFile(True)
+                Exit For
+            Catch ex As Exception
+                If iTime < MAX_READ_ATTEMPTS Then
+                    LogTools.LogError("Error reading XML file (will try again): " & ex.Message)
+                Else
+                    LogTools.LogError("Error reading XML file (tried " & MAX_READ_ATTEMPTS.ToString & " times): " & ex.Message)
+                End If
+            End Try
+
+            Thread.Sleep(1000)
+        Next
+    End Sub
+
+    Private Sub m_FileWatcher_Changed(sender As Object, e As FileSystemEventArgs) Handles m_FileWatcher.Changed
+        mUpdateSettingsFromFile = True
+        mUpdateSettingsRequestTime = DateTime.UtcNow
+    End Sub
 
     Private Sub mSettingsFileUpdateTimer_Elapsed(sender As Object, e As Timers.ElapsedEventArgs) Handles mSettingsFileUpdateTimer.Elapsed
         If mUpdateSettingsFromFile Then
