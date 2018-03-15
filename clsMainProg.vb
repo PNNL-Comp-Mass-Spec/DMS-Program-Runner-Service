@@ -190,6 +190,10 @@ Public Class clsMainProg
 
         Dim strSectionName = ""
 
+        If (String.IsNullOrWhiteSpace(strIniFilePath) OrElse Not File.Exists(strIniFilePath)) Then
+            Return lstProgramSettings
+        End If
+
         Using oReader = XmlReader.Create(New FileStream(strIniFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 
             While oReader.Read()
