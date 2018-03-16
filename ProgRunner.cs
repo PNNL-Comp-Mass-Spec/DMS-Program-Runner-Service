@@ -1,15 +1,26 @@
-﻿using System.ServiceProcess;
+﻿using System;
+using System.ServiceProcess;
 
 namespace ProgRunnerSvc
 {
     public partial class ProgRunner : ServiceBase
     {
-        private readonly clsMainProg MyProgRunner;
+        private readonly clsMainProg mProgRunner;
+        private readonly bool mAbortStart;
 
         public ProgRunner()
         {
             InitializeComponent();
-            MyProgRunner = new clsMainProg();
+
+            try
+            {
+                mProgRunner = new clsMainProg("ProgRunnerSvc");
+                mAbortStart = false;
+            }
+            catch (Exception)
+            {
+                mAbortStart = true;
+            }
         }
 
         /// <summary>
@@ -18,7 +29,20 @@ namespace ProgRunnerSvc
         /// <param name="args"></param>
         protected override void OnStart(string[] args)
         {
-            MyProgRunner.StartAllProgRunners();
+            if (mAbortStart)
+            {
+                Stop();
+                return;
+            }
+
+            try
+            {
+                mProgRunner.StartAllProgRunners();
+            }
+            catch (Exception)
+            {
+                Stop();
+            }
         }
 
         /// <summary>
@@ -26,8 +50,15 @@ namespace ProgRunnerSvc
         /// </summary>
         protected override void OnStop()
         {
-            MyProgRunner.StopAllProgRunners();
-            // MyProgRunner.Dispose();
+            try
+            {
+                mProgRunner.StopAllProgRunners();
+            }
+            catch (Exception)
+            {
+                // Ignore errors
+            }
+
         }
     }
 }

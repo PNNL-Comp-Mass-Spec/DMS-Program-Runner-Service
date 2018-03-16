@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Xml;
@@ -39,7 +41,8 @@ namespace ProgRunnerSvc
         /// <summary>
         /// Constructor
         /// </summary>
-        public clsMainProg()
+        /// <param name="processName">Name of this process (used to prevent duplicate instances)</param>
+        public clsMainProg(string processName)
         {
 
             try
@@ -60,6 +63,32 @@ namespace ProgRunnerSvc
                 {
                     LogTools.LogWarning("XML Parameter file not found: " + mIniFileNamePath);
                     LogTools.LogMessage("Settings will be loaded once the XML parameter file is created");
+                }
+
+                // Check running processes to assure that only one instance of the ProgRunner is running at a given time
+                var progRunnerInstances = GetProcessesByName(processName);
+                if (progRunnerInstances.Count > 1)
+                {
+                    // Abort starting this ProgRunner since another instance is already running
+                    var currentProcess = Process.GetCurrentProcess();
+                    var existingPid = 0;
+                    foreach (var runningProcess in progRunnerInstances)
+                    {
+                        if (runningProcess.Key != currentProcess.Id)
+                        {
+                            existingPid = runningProcess.Key;
+                            break;
+                        }
+                    }
+
+                    var msg = string.Format(
+                        "Aborting initialization of this Program Runner because process {0} with pID {1} is already running",
+                        processName, existingPid);
+
+                    LogTools.LogWarning(msg);
+                    LogTools.FlushPendingMessages();
+                    ConsoleMsgUtils.SleepSeconds(1);
+                    throw new Exception(msg);
                 }
 
                 // Set up the FileWatcher to detect setup file changes
@@ -87,6 +116,27 @@ namespace ProgRunnerSvc
             {
                 LogTools.LogError("Failed to initialize clsMainProg", ex);
             }
+        }
+
+        private Dictionary<int, Process> GetProcessesByName(string processName)
+        {
+            var processes = new Dictionary<int, Process>();
+
+            try
+            {
+                var processInstances = Process.GetProcessesByName(processName);
+
+                foreach (var runningProcess in processInstances)
+                {
+                    processes.Add(runningProcess.Id, runningProcess);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTools.LogError("Error in GetProcessesByName", ex);
+            }
+
+            return processes;
         }
 
         public void StartAllProgRunners()
