@@ -230,7 +230,8 @@ namespace ProgRunnerSvc
             if (string.IsNullOrWhiteSpace(iniFilePath) || !File.Exists(iniFilePath))
                 return programSettings;
 
-            using (var reader = XmlReader.Create(new FileStream(iniFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+            using (var fileStream = new FileStream(iniFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = XmlReader.Create(fileStream))
             {
                 while (reader.Read())
                 {
