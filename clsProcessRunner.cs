@@ -351,7 +351,7 @@ namespace ProgRunnerSvc
                             break;
                         }
 
-                        if (m_ProgramInfo.RepeatMode == "Repeat")
+                        if (StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                         {
                             LogTools.LogMessage("Waiting: " + KeyName);
                         }
@@ -374,7 +374,7 @@ namespace ProgRunnerSvc
                         ExitCode = mProcess.ExitCode;
                         mProcess.Close();
                         ThreadState = eThreadState.Idle;
-                        if (m_ProgramInfo.RepeatMode == "Repeat")
+                        if (StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                         {
                             // Process has exited; but its mode is repeat
                             // Wait for m_Holdoff seconds, then set ThreadState to eThreadState.ProcessStarting
@@ -390,7 +390,7 @@ namespace ProgRunnerSvc
                                     // However, don't set mUpdateRequired to False since we're not updating the other parameters
                                     UpdateThreadParameters(true);
 
-                                    if (m_ProgramInfo.RepeatMode != "Repeat")
+                                    if (!StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                                         break;
                                 }
 
@@ -398,8 +398,7 @@ namespace ProgRunnerSvc
                                     break;
                             }
 
-
-                            if (m_ProgramInfo.RepeatMode == "Repeat")
+                            if (StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                             {
                                 if (ThreadState == eThreadState.Idle)
                                     ThreadState = eThreadState.ProcessStarting;
@@ -408,7 +407,6 @@ namespace ProgRunnerSvc
                             {
                                 ThreadState = eThreadState.Idle;
                             }
-
 
                         }
                         else
@@ -444,6 +442,11 @@ namespace ProgRunnerSvc
         private static void SleepMilliseconds(int milliseconds)
         {
             ConsoleMsgUtils.SleepSeconds(milliseconds / 1000.0);
+        }
+
+        private static bool StringsMatch(string item1, string item2, bool ignoreCase = true)
+        {
+            return string.Equals(item1, item2, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
         private void UpdateThreadParameters(bool updateRepeatAndHoldoffOnly)
@@ -482,7 +485,9 @@ namespace ProgRunnerSvc
                     }
                 }
 
-                if (m_NewProgramInfo.RepeatMode == "Repeat" || m_NewProgramInfo.RepeatMode == "Once" || m_NewProgramInfo.RepeatMode == "No")
+                if (StringsMatch(mNewProgramInfo.RepeatMode, "Repeat") ||
+                    StringsMatch(mNewProgramInfo.RepeatMode, "Once") ||
+                    StringsMatch(mNewProgramInfo.RepeatMode, "No"))
                 {
                     mWarnedInvalidRepeatMode = false;
                 }
@@ -511,23 +516,23 @@ namespace ProgRunnerSvc
                 {
                     if (ThreadState == eThreadState.Idle)
                     {
-                        if (m_NewProgramInfo.RepeatMode == "Repeat")
+                        if (StringsMatch(mNewProgramInfo.RepeatMode, "Repeat"))
                         {
                             ThreadState = eThreadState.ProcessStarting;
                         }
-                        else if (m_NewProgramInfo.RepeatMode == "Once")
+                        else if (StringsMatch(mNewProgramInfo.RepeatMode, "Once"))
                         {
-                            if (m_ProgramInfo.ProgramPath != m_NewProgramInfo.ProgramPath)
+                            if (!string.Equals(mProgramInfo.ProgramPath, mNewProgramInfo.ProgramPath))
                             {
                                 ThreadState = eThreadState.ProcessStarting;
                             }
-                            else if (m_ProgramInfo.ProgramArguments != m_NewProgramInfo.ProgramArguments)
+                            else if (!string.Equals(mProgramInfo.ProgramArguments, mNewProgramInfo.ProgramArguments))
                             {
                                 ThreadState = eThreadState.ProcessStarting;
                             }
                             else
                             {
-                                if (m_ProgramInfo.RepeatMode == "No" || m_ProgramInfo.RepeatMode == "Repeat")
+                                if (StringsMatch(mProgramInfo.RepeatMode, "No") || StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                                 {
                                     ThreadState = eThreadState.ProcessStarting;
                                 }
