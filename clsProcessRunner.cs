@@ -22,67 +22,76 @@ namespace ProgRunnerSvc
             ProcessStarting,
             ProcessRunning,
         }
+        #region "Member Variables"
 
         private readonly Process mProcess = new Process();
+
         private bool mWarnedInvalidRepeatMode;
+
+        private clsProcessSettings mProgramInfo;
+
+        private clsProcessSettings mNewProgramInfo;
 
         /// <summary>
         /// The internal thread used to run the monitoring code. That starts and monitors the external program.
         /// </summary>
-        private Thread m_Thread;
+        private Thread mThread;
 
         /// <summary>
         /// Flag that tells internal thread to quit monitoring external program and exit.
         /// </summary>
-        private bool m_ThreadStopCommand;
+        private bool mThreadStopCommand;
 
         /// <summary>
         /// The interval (in milliseconds) for monitoring thread to wake up and check m_doCleanup.
         /// </summary>
-        private int m_monitorInterval = 1000;
+        private int mMonitorIntervalMsec = 1000;
+
+        private readonly object oSync = 1;
+
+        private bool mUpdateRequired;
+
+        #endregion
+
+        #region "Properties"
 
         /// <summary>
         /// Key name for this program (unique across all programs registered to run)
         /// </summary>
         public string KeyName { get; private set; }
 
-        private clsProcessSettings m_ProgramInfo;
-
-        private clsProcessSettings m_NewProgramInfo;
-
         /// <summary>
-        /// Path to the program (.exe) to run
+        /// Path to the program (.exe or .bat) to run
         /// </summary>
-        public string ProgramPath => m_ProgramInfo.ProgramPath;
+        public string ProgramPath => mProgramInfo.ProgramPath;
 
         /// <summary>
         /// Arguments to pass to the program
         /// </summary>
-        public string ProgramArguments => m_ProgramInfo.ProgramArguments;
+        public string ProgramArguments => mProgramInfo.ProgramArguments;
 
         /// <summary>
         /// Repeat mode
         /// </summary>
         /// <remarks>Valid values are Repeat, Once, and No</remarks>
-        public string RepeatMode => m_ProgramInfo.RepeatMode;
+        public string RepeatMode => mProgramInfo.RepeatMode;
 
         /// <summary>
         /// Holdoff time, in seconds (not milliseconds)
         /// </summary>
-        public int Holdoff => m_ProgramInfo.HoldoffSeconds;
+        public int Holdoff => mProgramInfo.HoldoffSeconds;
 
-        private readonly object oSync = 1;
-
-        private bool mUpdateRequired;
-
+        /// <summary>
+        /// The interval (in milliseconds) for monitoring thread to wake up and check m_doCleanup.
+        /// </summary>
         public int MonitoringInterval
         {
-            get => m_monitorInterval;
+            get => mMonitorIntervalMsec;
             set
             {
                 if (value < 100)
                     value = 100;
-                m_monitorInterval = value;
+                mMonitorIntervalMsec = value;
             }
         }
 
@@ -115,6 +124,8 @@ namespace ProgRunnerSvc
         /// Window style to use when CreateNoWindow is False
         /// </summary>
         public ProcessWindowStyle WindowStyle { get; private set; }
+
+#endregion
 
         /// <summary>
         /// Constructor
@@ -154,9 +165,9 @@ namespace ProgRunnerSvc
 
             ThreadState = eThreadState.No;
             KeyName = processSettings.UniqueKey;
-            m_ProgramInfo = new clsProcessSettings(KeyName);
+            mProgramInfo = new clsProcessSettings(KeyName);
 
-            m_NewProgramInfo = processSettings;
+            mNewProgramInfo = processSettings;
 
             WorkDir = workingDirectory;
             WindowStyle = windowStyle;
@@ -175,7 +186,7 @@ namespace ProgRunnerSvc
             try
             {
                 Monitor.Enter(oSync);
-                m_NewProgramInfo = newProgramInfo;
+                mNewProgramInfo = newProgramInfo;
                 mUpdateRequired = true;
                 Monitor.Exit(oSync);
             }
@@ -191,9 +202,9 @@ namespace ProgRunnerSvc
             {
                 try
                 {
-                    m_Thread = new Thread(ProcessThread);
-                    m_Thread.SetApartmentState(ApartmentState.STA);
-                    m_Thread.Start();
+                    mThread = new Thread(ProcessThread);
+                    mThread.SetApartmentState(ApartmentState.STA);
+                    mThread.Start();
                 }
                 catch (Exception ex)
                 {
@@ -211,11 +222,10 @@ namespace ProgRunnerSvc
                 return;
             }
 
-            m_ThreadStopCommand = true;
+            mThreadStopCommand = true;
             if (ThreadState == eThreadState.ProcessRunning)
             {
                 LogTools.LogMessage("Try to kill process: " + KeyName);
-
 
                 try
                 {
@@ -234,8 +244,7 @@ namespace ProgRunnerSvc
                     LogTools.LogWarning("Exception killing process '" + KeyName + "': " + ex.Message);
                 }
 
-
-                if (!mProcess.WaitForExit(m_monitorInterval))
+                if (!mProcess.WaitForExit(mMonitorIntervalMsec))
                 {
                     LogTools.LogError("Failed to kill process '" + KeyName + "'");
                 }
@@ -247,29 +256,27 @@ namespace ProgRunnerSvc
 
             try
             {
-                m_Thread.Join(m_monitorInterval);
+                mThread.Join(mMonitorIntervalMsec);
             }
             catch (Exception ex)
             {
                 LogTools.LogError("Failed to wait while stopping thread '" + KeyName + "'", ex);
             }
 
-            if (m_Thread.IsAlive)
+            if (mThread.IsAlive)
             {
                 LogTools.LogMessage("Try to abort thread: " + KeyName);
 
                 try
                 {
-                    m_Thread.Abort();
+                    mThread.Abort();
                 }
                 catch (Exception ex)
                 {
                     LogTools.LogError("Failed to stop thread '" + KeyName + "'", ex);
                 }
 
-
             }
-
 
         }
 
@@ -295,7 +302,7 @@ namespace ProgRunnerSvc
 
             while (true)
             {
-                if (m_ThreadStopCommand)
+                if (mThreadStopCommand)
                     break;
 
                 if (mUpdateRequired)
@@ -311,17 +318,16 @@ namespace ProgRunnerSvc
                 {
                     try
                     {
-                        if (string.IsNullOrWhiteSpace(m_ProgramInfo.ProgramPath))
+                        if (string.IsNullOrWhiteSpace(mProgramInfo.ProgramPath))
                         {
                             LogTools.LogError("Error running process '" + KeyName + "': empty program path");
                             ThreadState = eThreadState.ProcessBroken;
                             return;
                         }
 
-
-                        mProcess.StartInfo.FileName = m_ProgramInfo.ProgramPath;
+                        mProcess.StartInfo.FileName = mProgramInfo.ProgramPath;
                         mProcess.StartInfo.WorkingDirectory = WorkDir;
-                        mProcess.StartInfo.Arguments = m_ProgramInfo.ProgramArguments;
+                        mProcess.StartInfo.Arguments = mProgramInfo.ProgramArguments;
                         mProcess.StartInfo.CreateNoWindow = CreateNoWindow;
 
                         if (mProcess.StartInfo.CreateNoWindow)
@@ -334,12 +340,12 @@ namespace ProgRunnerSvc
                         PID = mProcess.Id;
                         LogTools.LogMessage("Started: " + KeyName + ", pID=" + PID);
 
-                        while (!(m_ThreadStopCommand || mProcess.HasExited))
+                        while (!(mThreadStopCommand || mProcess.HasExited))
                         {
-                            mProcess.WaitForExit(m_monitorInterval);
+                            mProcess.WaitForExit(mMonitorIntervalMsec);
                         }
 
-                        if (m_ThreadStopCommand)
+                        if (mThreadStopCommand)
                         {
                             LogTools.LogMessage("Stopped: " + KeyName);
                             break;
@@ -372,7 +378,7 @@ namespace ProgRunnerSvc
                         {
                             // Process has exited; but its mode is repeat
                             // Wait for m_Holdoff seconds, then set ThreadState to eThreadState.ProcessStarting
-                            var dtHoldoffStartTime = DateTime.UtcNow;
+                            var holdoffStartTime = DateTime.UtcNow;
 
                             while (true)
                             {
@@ -388,7 +394,7 @@ namespace ProgRunnerSvc
                                         break;
                                 }
 
-                                if (DateTime.UtcNow.Subtract(dtHoldoffStartTime).TotalSeconds >= m_ProgramInfo.HoldoffSeconds)
+                                if (DateTime.UtcNow.Subtract(holdoffStartTime).TotalSeconds >= mProgramInfo.HoldoffSeconds)
                                     break;
                             }
 
@@ -443,34 +449,33 @@ namespace ProgRunnerSvc
             {
                 Monitor.Enter(oSync);
 
-                if (string.IsNullOrWhiteSpace(m_NewProgramInfo.ProgramPath))
-                    m_NewProgramInfo.ProgramPath = string.Empty;
+                if (string.IsNullOrWhiteSpace(mNewProgramInfo.ProgramPath))
+                    mNewProgramInfo.ProgramPath = string.Empty;
 
-                if (string.IsNullOrWhiteSpace(m_NewProgramInfo.ProgramArguments))
-                    m_NewProgramInfo.ProgramArguments = string.Empty;
+                if (string.IsNullOrWhiteSpace(mNewProgramInfo.ProgramArguments))
+                    mNewProgramInfo.ProgramArguments = string.Empty;
 
-                if (string.IsNullOrWhiteSpace(m_NewProgramInfo.RepeatMode))
-                    m_NewProgramInfo.RepeatMode = "No";
+                if (string.IsNullOrWhiteSpace(mNewProgramInfo.RepeatMode))
+                    mNewProgramInfo.RepeatMode = "No";
 
-                if (m_NewProgramInfo.HoldoffSeconds < 1)
-                    m_NewProgramInfo.HoldoffSeconds = 1;
-
+                if (mNewProgramInfo.HoldoffSeconds < 1)
+                    mNewProgramInfo.HoldoffSeconds = 1;
 
                 // Make sure the first letter of StrNewRepeat is capitalized and the other letters are lowercase
-                m_NewProgramInfo.RepeatMode = CapitalizeMode(m_NewProgramInfo.RepeatMode);
+                mNewProgramInfo.RepeatMode = CapitalizeMode(mNewProgramInfo.RepeatMode);
 
                 if (!updateRepeatAndHoldoffOnly)
                 {
-                    if (string.IsNullOrWhiteSpace(m_NewProgramInfo.ProgramPath))
+                    if (string.IsNullOrWhiteSpace(mNewProgramInfo.ProgramPath))
                     {
                         ThreadState = eThreadState.ProcessBroken;
                         LogTools.LogError("Process '" + KeyName + "' failed due to empty program name");
                     }
 
-                    if (!System.IO.File.Exists(m_NewProgramInfo.ProgramPath))
+                    if (!System.IO.File.Exists(mNewProgramInfo.ProgramPath))
                     {
                         ThreadState = eThreadState.ProcessBroken;
-                        LogTools.LogError("Process '" + KeyName + "' failed due to missing program file: " + m_NewProgramInfo.ProgramPath);
+                        LogTools.LogError("Process '" + KeyName + "' failed due to missing program file: " + mNewProgramInfo.ProgramPath);
                     }
                 }
 
@@ -487,15 +492,15 @@ namespace ProgRunnerSvc
                         if (!mWarnedInvalidRepeatMode)
                         {
                             mWarnedInvalidRepeatMode = true;
-                            LogTools.LogError("Invalid \"run\" value for process '" + KeyName + "': " + m_NewProgramInfo.RepeatMode + "; valid values are Repeat, Once, and No");
+                            LogTools.LogError("Invalid \"run\" value for process '" + KeyName + "': " + mNewProgramInfo.RepeatMode + "; valid values are Repeat, Once, and No");
                         }
 
-                        m_NewProgramInfo.RepeatMode = m_ProgramInfo.RepeatMode;
+                        mNewProgramInfo.RepeatMode = mProgramInfo.RepeatMode;
                     }
                     else
                     {
                         ThreadState = eThreadState.ProcessBroken;
-                        LogTools.LogError("Process '" + KeyName + "' failed due to incorrect \"run\" value of '" + m_NewProgramInfo.RepeatMode + "'; valid values are Repeat, Once, and No");
+                        LogTools.LogError("Process '" + KeyName + "' failed due to incorrect \"run\" value of '" + mNewProgramInfo.RepeatMode + "'; valid values are Repeat, Once, and No");
                     }
                 }
 
@@ -525,7 +530,7 @@ namespace ProgRunnerSvc
                                 }
                                 else
                                 {
-                                    if (m_ProgramInfo.HoldoffSeconds != m_NewProgramInfo.HoldoffSeconds)
+                                    if (mProgramInfo.HoldoffSeconds != mNewProgramInfo.HoldoffSeconds)
                                     {
                                         ThreadState = eThreadState.ProcessStarting;
                                     }
@@ -535,11 +540,10 @@ namespace ProgRunnerSvc
                     }
                 }
 
-
-                m_ProgramInfo.ProgramPath = m_NewProgramInfo.ProgramPath;
-                m_ProgramInfo.ProgramArguments = m_NewProgramInfo.ProgramArguments;
-                m_ProgramInfo.RepeatMode = m_NewProgramInfo.RepeatMode;
-                m_ProgramInfo.HoldoffSeconds = m_NewProgramInfo.HoldoffSeconds;
+                mProgramInfo.ProgramPath = mNewProgramInfo.ProgramPath;
+                mProgramInfo.ProgramArguments = mNewProgramInfo.ProgramArguments;
+                mProgramInfo.RepeatMode = mNewProgramInfo.RepeatMode;
+                mProgramInfo.HoldoffSeconds = mNewProgramInfo.HoldoffSeconds;
 
                 ExitCode = 0;
                 Monitor.Exit(oSync);

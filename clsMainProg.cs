@@ -93,14 +93,14 @@ namespace ProgRunnerSvc
 
         private void UpdateProgRunnersFromFile(bool passXMLFileParsingExceptionsToCaller)
         {
-            List<clsProcessSettings> lstProgramSettings;
+            List<clsProcessSettings> programSettings;
 
             try
             {
                 if (string.IsNullOrWhiteSpace(mIniFileNamePath))
                     return;
 
-                lstProgramSettings = GetProcesses(mIniFileNamePath);
+                programSettings = GetProgRunnerSettings(mIniFileNamePath);
             }
             catch (Exception ex)
             {
@@ -115,22 +115,22 @@ namespace ProgRunnerSvc
 
             // Make a list of the currently running progrunners
             // Keys are the UniqueKey for each progrunner, value is initially False but is set to true for each manager processed
-            var lstProgRunners = new Dictionary<string, bool>();
+            var progRunners = new Dictionary<string, bool>();
 
             foreach (var uniqueProgramKey in mProgRunners.Keys)
             {
-                lstProgRunners.Add(uniqueProgramKey, false);
+                progRunners.Add(uniqueProgramKey, false);
             }
 
             var threadsProcessed = 0;
             var oRandom = new Random();
 
-            foreach (var oProcessSettings in lstProgramSettings)
+            foreach (var settingsEntry in programSettings)
             {
 
                 threadsProcessed += 1;
 
-                var uniqueProgramKey = oProcessSettings.UniqueKey;
+                var uniqueProgramKey = settingsEntry.UniqueKey;
                 if (string.IsNullOrWhiteSpace(uniqueProgramKey))
                 {
                     LogTools.LogError("Ignoring empty program key in the Programs section");
@@ -142,14 +142,14 @@ namespace ProgRunnerSvc
                     if (!mProgRunners.ContainsKey(uniqueProgramKey))
                     {
                         // New entry
-                        var oCProcessRunner = new clsProcessRunner(oProcessSettings);
+                        var oCProcessRunner = new clsProcessRunner(settingsEntry);
 
-                        lstProgRunners.Add(uniqueProgramKey, true);
+                        progRunners.Add(uniqueProgramKey, true);
 
                         mProgRunners.Add(uniqueProgramKey, oCProcessRunner);
                         LogTools.LogMessage("Added program '" + uniqueProgramKey + "'");
 
-                        if (threadsProcessed < lstProgramSettings.Count)
+                        if (threadsProcessed < programSettings.Count)
                         {
                             // Delay between 1 and 2 seconds before continuing
                             // We do this so that the ProgRunner doesn't start a bunch of processes all at once
@@ -162,8 +162,8 @@ namespace ProgRunnerSvc
                     {
                         // Updated entry
                         var oCProcessRunner = mProgRunners[uniqueProgramKey];
-                        oCProcessRunner.UpdateProcessParameters(oProcessSettings);
-                        lstProgRunners[uniqueProgramKey] = true;
+                        oCProcessRunner.UpdateProcessParameters(settingsEntry);
+                        progRunners[uniqueProgramKey] = true;
 
                         LogTools.LogMessage("Updated program '" + uniqueProgramKey + "'");
                     }
@@ -173,27 +173,25 @@ namespace ProgRunnerSvc
                     LogTools.LogError("Error in UpdateProgRunnersFromFile updating process '" + uniqueProgramKey + "': " + ex.Message);
                 }
 
-
             }
-
 
             try
             {
                 // Remove disappeared processes
-                var lstProcessesToStop = new List<string>();
+                var processesToStop = new List<string>();
 
                 foreach (var progRunnerEntry in mProgRunners)
                 {
-                    if (lstProgRunners.TryGetValue(progRunnerEntry.Key, out var enabled))
+                    if (progRunners.TryGetValue(progRunnerEntry.Key, out var enabled))
                     {
                         if (!enabled)
                         {
-                            lstProcessesToStop.Add(progRunnerEntry.Key);
+                            processesToStop.Add(progRunnerEntry.Key);
                         }
                     }
                 }
 
-                foreach (var uniqueProgramKey in lstProcessesToStop)
+                foreach (var uniqueProgramKey in processesToStop)
                 {
                     mProgRunners[uniqueProgramKey].StopThread();
                     mProgRunners.Remove(uniqueProgramKey);
@@ -219,15 +217,15 @@ namespace ProgRunnerSvc
             LogTools.LogMessage("MultiProgRunner stopped");
         }
 
-        private List<clsProcessSettings> GetProcesses(string iniFilePath)
+        private List<clsProcessSettings> GetProgRunnerSettings(string iniFilePath)
         {
 
-            var lstProgramSettings = new List<clsProcessSettings>();
+            var programSettings = new List<clsProcessSettings>();
 
-            var strSectionName = "";
+            var sectionName = "";
 
             if (string.IsNullOrWhiteSpace(iniFilePath) || !File.Exists(iniFilePath))
-                return lstProgramSettings;
+                return programSettings;
 
             using (var reader = XmlReader.Create(new FileStream(iniFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
             {
@@ -240,44 +238,43 @@ namespace ProgRunnerSvc
                             {
                                 try
                                 {
-                                    strSectionName = reader.GetAttribute("name");
+                                    sectionName = reader.GetAttribute("name");
                                 }
                                 catch (Exception ex)
                                 {
-                                    // Section element doesn't have a "name" attribute; set strSectionName to ""
-                                    strSectionName = string.Empty;
+                                    // Section element doesn't have a "name" attribute; set sectionName to ""
+                                    sectionName = string.Empty;
 
                                     LogTools.LogError("Error parsing XML Config file: " + ex.Message);
                                 }
 
-                                if (strSectionName == null)
+                                if (sectionName == null)
                                 {
-                                    strSectionName = string.Empty;
+                                    sectionName = string.Empty;
                                 }
 
                                 continue;
                             }
 
-
                             // Expected format:
                             //  <section name="programs">
                             //    <item key="Analysis1" value="C:\DMS_Programs\AnalysisToolManager1\StartManager1.bat" arguments="" run="Repeat" holdoff="300" />
 
-                            if (reader.Depth == 2 && strSectionName == "programs" && reader.Name == "item")
+                            if (reader.Depth == 2 && sectionName == "programs" && reader.Name == "item")
                             {
 
-                                var strKeyName = "";
+                                var keyName = "";
 
                                 try
                                 {
-                                    strKeyName = reader.GetAttribute("key");
+                                    keyName = reader.GetAttribute("key");
 
-                                    if (string.IsNullOrWhiteSpace(strKeyName))
+                                    if (string.IsNullOrWhiteSpace(keyName))
                                     {
                                         LogTools.LogError("Empty key name; ignoring entry");
                                     }
 
-                                    var oProgramSettings = new clsProcessSettings(strKeyName)
+                                    var oProgramSettings = new clsProcessSettings(keyName)
                                     {
                                         ProgramPath = GetAttributeSafe(reader, "value"),
                                         ProgramArguments = GetAttributeSafe(reader, "arguments"),
@@ -288,19 +285,19 @@ namespace ProgRunnerSvc
 
                                     if (!int.TryParse(holdOffSecondsText, out var holdOffSeconds))
                                     {
-                                        LogTools.LogError("Invalid \"Holdoff\" value for process '" + strKeyName + "': " + holdOffSecondsText +
+                                        LogTools.LogError("Invalid \"Holdoff\" value for process '" + keyName + "': " + holdOffSecondsText +
                                                           "; this value must be an integer (defining the holdoff time, in seconds).  Will assume 300");
                                         holdOffSeconds = 300;
                                     }
 
                                     oProgramSettings.HoldoffSeconds = holdOffSeconds;
 
-                                    lstProgramSettings.Add(oProgramSettings);
+                                    programSettings.Add(oProgramSettings);
                                 }
                                 catch (Exception ex)
                                 {
                                     // Ignore this entry
-                                    LogTools.LogError("Error parsing XML Config file for key " + strKeyName + ": " + ex.Message);
+                                    LogTools.LogError("Error parsing XML Config file for key " + keyName + ": " + ex.Message);
                                 }
                             }
                             break;
@@ -308,7 +305,7 @@ namespace ProgRunnerSvc
                         case XmlNodeType.EndElement:
 
                             if (reader.Name == "section")
-                                strSectionName = string.Empty;
+                                sectionName = string.Empty;
 
                             break;
 
@@ -317,7 +314,7 @@ namespace ProgRunnerSvc
                 }
             }
 
-            return lstProgramSettings;
+            return programSettings;
         }
 
         private string GetAttributeSafe(XmlReader reader, string attributeName)
@@ -343,7 +340,7 @@ namespace ProgRunnerSvc
 
             const int MAX_READ_ATTEMPTS = 3;
 
-            for (var iTime = 1; iTime <= MAX_READ_ATTEMPTS; iTime++)
+            for (var iteration = 1; iteration <= MAX_READ_ATTEMPTS; iteration++)
             {
 
                 LogTools.LogMessage("File changed");
@@ -358,7 +355,7 @@ namespace ProgRunnerSvc
                 catch (Exception ex)
                 {
 
-                    if (iTime < MAX_READ_ATTEMPTS)
+                    if (iteration < MAX_READ_ATTEMPTS)
                         LogTools.LogError("Error reading XML file (will try again): " + ex.Message);
                     else
                         LogTools.LogError(string.Format("Error reading XML file (tried {0} times): {1}", MAX_READ_ATTEMPTS, ex.Message));
