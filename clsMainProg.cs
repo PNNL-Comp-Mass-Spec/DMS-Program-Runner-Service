@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Xml;
 using PRISM;
 using PRISM.FileProcessor;
@@ -37,6 +35,11 @@ namespace ProgRunnerSvc
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly System.Timers.Timer mSettingsFileUpdateTimer;
+
+        /// <summary>
+        /// Startup Aborted is set to True if another instance was detected
+        /// </summary>
+        public bool StartupAborted { get; }
 
         /// <summary>
         /// Constructor
@@ -88,7 +91,9 @@ namespace ProgRunnerSvc
                     LogTools.LogWarning(msg);
                     LogTools.FlushPendingMessages();
                     ConsoleMsgUtils.SleepSeconds(1);
-                    throw new Exception(msg);
+
+                    StartupAborted = true;
+                    return;
                 }
 
                 // Set up the FileWatcher to detect setup file changes
