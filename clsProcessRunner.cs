@@ -382,7 +382,7 @@ namespace ProgRunnerSvc
 
                             while (true)
                             {
-                                Thread.Sleep(REPEAT_HOLDOFF_SLEEP_TIME_MSEC);
+                                SleepMilliseconds(REPEAT_HOLDOFF_SLEEP_TIME_MSEC);
 
                                 if (mUpdateRequired)
                                 {
@@ -413,10 +413,8 @@ namespace ProgRunnerSvc
                         }
                         else
                         {
-                            Thread.Sleep(m_monitorInterval);
+                            SleepMilliseconds(mMonitorIntervalMsec);
                         }
-
-
 
                     }
                     catch (ThreadAbortException)
@@ -434,13 +432,18 @@ namespace ProgRunnerSvc
                 }
                 else
                 {
-                    Thread.Sleep(m_monitorInterval);
+                    SleepMilliseconds(mMonitorIntervalMsec);
                 }
             }
 
             ThreadState = eThreadState.No;
             LogTools.LogMessage("Thread stopped: " + KeyName);
 
+        }
+
+        private static void SleepMilliseconds(int milliseconds)
+        {
+            ConsoleMsgUtils.SleepSeconds(milliseconds / 1000.0);
         }
 
         private void UpdateThreadParameters(bool updateRepeatAndHoldoffOnly)
