@@ -1,4 +1,6 @@
 ﻿
+using PRISM;
+
 namespace ProgRunnerTest
 {
     class Program
@@ -12,8 +14,8 @@ namespace ProgRunnerTest
             // Start the service running
             myProgRunner.StartAllProgRunners();
 
-            // Wait for 60 seconds
-            System.Threading.Thread.Sleep(300 * 1000);
+            // Wait for 120 seconds
+            ConsoleMsgUtils.SleepSeconds(120);
 
             // Stop the service
             myProgRunner.StopAllProgRunners();

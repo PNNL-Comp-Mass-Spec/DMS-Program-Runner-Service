@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Xml;
+using PRISM;
 using PRISM.FileProcessor;
 using PRISM.Logging;
 
@@ -14,6 +15,7 @@ namespace ProgRunnerSvc
         private const int SETTINGS_FILE_UPDATE_DELAY_MSEC = 1500;
 
         private const string XML_PARAM_FILE_NAME = "MultiProgRunner.xml";
+
         private readonly string mIniFileNamePath = string.Empty;
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
@@ -28,6 +30,7 @@ namespace ProgRunnerSvc
         // When the .XML settings file is changed, mUpdateSettingsFromFile is set to True and mUpdateSettingsRequestTime is set to the current date/time
         // Timer looks for mSettingsFileUpdateTimer being true, and after 1500 milliseconds has elapsed, it calls UpdateSettingsFromFile
         private bool mUpdateSettingsFromFile;
+
         private DateTime mUpdateSettingsRequestTime;
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
@@ -153,8 +156,8 @@ namespace ProgRunnerSvc
                         {
                             // Delay between 1 and 2 seconds before continuing
                             // We do this so that the ProgRunner doesn't start a bunch of processes all at once
-                            var delayTimeMsec = oRandom.Next(1000, 2000);
-                            Thread.Sleep(delayTimeMsec);
+                            var delayTimeSec = 1 + oRandom.NextDouble();
+                            ConsoleMsgUtils.SleepSeconds(delayTimeSec);
                         }
 
                     }
@@ -362,7 +365,7 @@ namespace ProgRunnerSvc
 
                 }
 
-                Thread.Sleep(1000);
+                ConsoleMsgUtils.SleepSeconds(1);
 
             }
 
