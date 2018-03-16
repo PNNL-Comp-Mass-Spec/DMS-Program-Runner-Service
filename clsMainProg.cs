@@ -65,7 +65,12 @@ namespace ProgRunnerSvc
                 if (!File.Exists(mIniFileNamePath))
                 {
                     LogTools.LogWarning("XML Parameter file not found: " + mIniFileNamePath);
-                    LogTools.LogMessage("Settings will be loaded once the XML parameter file is created");
+                    LogTools.LogMessage("Please create the file then restart this application or service");
+                    LogTools.FlushPendingMessages();
+                    ConsoleMsgUtils.SleepSeconds(1);
+
+                    StartupAborted = true;
+                    return;
                 }
 
                 // Check running processes to assure that only one instance of the ProgRunner is running at a given time
