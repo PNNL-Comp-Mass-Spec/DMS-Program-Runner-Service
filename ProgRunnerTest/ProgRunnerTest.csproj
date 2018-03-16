@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{0FD08D54-58B9-420A-A8E3-9DED0C72F846}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>ProgRunnerTest</RootNamespace>
-    <AssemblyName>ProgRunnerTest</AssemblyName>
+    <RootNamespace>ProgRunnerApp</RootNamespace>
+    <AssemblyName>ProgRunnerApp</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

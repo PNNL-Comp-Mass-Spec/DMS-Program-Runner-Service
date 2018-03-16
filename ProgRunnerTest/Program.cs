@@ -2,7 +2,7 @@
 using PRISM;
 using System;
 
-namespace ProgRunnerTest
+namespace ProgRunnerApp
 {
     class Program
     {
