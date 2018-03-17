@@ -4,7 +4,6 @@ namespace ProgRunnerSvc
     internal class clsProcessSettings
     {
 
-        protected string m_UniqueKey;
         /// <summary>
         /// Delay, in seconds, that the ProgRunner service will wait
         /// before first starting this program after the service starts,
@@ -13,9 +12,9 @@ namespace ProgRunnerSvc
         public int DelaySeconds { get; set; }
 
         /// <summary>
-        /// Unique name for this program
+        /// Holdoff time, in seconds (not milliseconds)
         /// </summary>
-        public string UniqueKey => m_UniqueKey;
+        public int HoldoffSeconds { get; set; }
 
         /// <summary>
         /// Path to the program (.exe or .bat) to run
@@ -34,11 +33,13 @@ namespace ProgRunnerSvc
         public string RepeatMode { get; set; }
 
         /// <summary>
-        /// Holdoff time, in seconds (not milliseconds)
+        /// Unique name for this program
+        /// </summary>
+        public string UniqueKey { get; }
+
         /// <summary>
         /// Working directory path
         /// </summary>
-        public int HoldoffSeconds  { get; set; }
         /// <remarks>If empty, the working directory is determined using ProgramPath</remarks>
         public string WorkDir { get; set; }
 
@@ -47,12 +48,12 @@ namespace ProgRunnerSvc
         /// </summary>
         public clsProcessSettings(string uniqueKey)
         {
-            m_UniqueKey = uniqueKey;
+            UniqueKey = uniqueKey;
         }
 
         public override string ToString()
         {
-            return m_UniqueKey;
+            return UniqueKey;
         }
     }
 }
