@@ -56,7 +56,7 @@ namespace ProgRunnerSvc
 
                 mXmlParamFilePath = Path.Combine(fi.DirectoryName, XML_PARAM_FILE_NAME);
 
-                const string logFileNameBase = @"Logs\ProgRunner";
+                var logFileNameBase = Path.Combine("Logs", "ProgRunner");
                 LogTools.CreateFileLogger(logFileNameBase);
 
                 var appVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
