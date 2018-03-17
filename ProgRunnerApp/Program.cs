@@ -11,7 +11,7 @@ namespace ProgRunnerApp
     /// </summary>
     class Program
     {
-        public const string PROGRAM_DATE = "March 15, 2018";
+        public const string PROGRAM_DATE = "March 16, 2018";
 
         static int mMaxRuntimeMinutes;
 

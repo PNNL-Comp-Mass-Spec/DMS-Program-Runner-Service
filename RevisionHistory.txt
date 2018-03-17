@@ -1,5 +1,12 @@
 Program Runner (MultiProgRunner) Revision History
 
+Version 1.3.6649; March 16, 2018
+	- Add support for options "delay" and "workdir" in the XML parameter file (MultiProgRunner.xml)
+
+Version 1.3.6648; March 15, 2018
+	- Convert to C#
+	- Create standalone executable version for use on Linux
+
 Version 1.2.6612; February 7, 2017
 	- Replace Log4net with Logging classes in PRISM.dll
 
