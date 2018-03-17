@@ -342,17 +342,30 @@ namespace ProgRunnerSvc
                                     {
                                         ProgramPath = GetAttributeSafe(reader, "value"),
                                         ProgramArguments = GetAttributeSafe(reader, "arguments"),
-                                        RepeatMode = GetAttributeSafe(reader, "run", "Once")
+                                        RepeatMode = GetAttributeSafe(reader, "run", "Once"),
+                                        WorkDir =  GetAttributeSafe(reader, "workdir", "")
                                     };
 
-                                    var holdOffSecondsText = GetAttributeSafe(reader, "holdoff", "10");
+                                    var holdOffSecondsText = GetAttributeSafe(reader, "holdoff", "300");
 
                                     if (!int.TryParse(holdOffSecondsText, out var holdOffSeconds))
                                     {
-                                        LogTools.LogError("Invalid \"Holdoff\" value for process '" + keyName + "': " + holdOffSecondsText +
+                                        LogTools.LogError("Invalid \"holdoff\" value for process '" + keyName + "': " + holdOffSecondsText +
                                                           "; this value must be an integer (defining the holdoff time, in seconds).  Will assume 300");
                                         holdOffSeconds = 300;
                                     }
+
+                                    var delaySecondsText = GetAttributeSafe(reader, "delay", "0");
+
+                                    if (!int.TryParse(delaySecondsText, out var delaySeconds))
+                                    {
+                                        LogTools.LogError("Invalid \"delay\" value for process '" + keyName + "': " + delaySecondsText +
+                                                          "; this value must be an integer (defining the delay time, in seconds, " +
+                                                          "after the progrunner first starts, that it will wait to start this process).  Will assume 0");
+                                        delaySeconds = 0;
+                                    }
+
+                                    oProgramSettings.DelaySeconds = delaySeconds;
 
                                     oProgramSettings.HoldoffSeconds = holdOffSeconds;
 
