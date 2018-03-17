@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using PRISM;
 using PRISM.Logging;
@@ -23,6 +25,8 @@ namespace ProgRunnerSvc
             ProcessRunning,
         }
         #region "Member Variables"
+
+        private readonly Regex mMonoProgramMatcher;
 
         private readonly Process mProcess = new Process();
 
@@ -50,6 +54,8 @@ namespace ProgRunnerSvc
         private readonly object oSync = 1;
 
         private bool mUpdateRequired;
+
+        private bool mWorkDirLogged;
 
         #endregion
 
@@ -113,7 +119,8 @@ namespace ProgRunnerSvc
         /// <summary>
         /// Working directory for process execution.
         /// </summary>
-        public string WorkDir { get; private set; }
+        /// <remarks>If empty, will determine the working directory based on ProgramPath</remarks>
+        public string WorkDir => mProgramInfo.WorkDir;
 
         /// <summary>
         /// Determine if window should be displayed
@@ -131,45 +138,34 @@ namespace ProgRunnerSvc
         /// Constructor
         /// </summary>
         /// <param name="processSettings">Process settings</param>
-        /// <param name="createNoWindow">True to create no window, false to use a normal window</param>
-        public clsProcessRunner(clsProcessSettings processSettings, bool createNoWindow = false)
+        /// <param name="windowStyle">Window style (defeaults to Normal)</param>
+        /// <param name="createNoWindow">True to create no window, false to use a normal window; defaults to false</param>
+        public clsProcessRunner(clsProcessSettings processSettings, ProcessWindowStyle windowStyle = ProcessWindowStyle.Normal, bool createNoWindow = false)
         {
-            Initialize(processSettings, WorkDir, ProcessWindowStyle.Normal, createNoWindow);
+            mMonoProgramMatcher = new Regex("^(mono(.exe)?|[^ ]+/mono(.exe)?)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            Initialize(processSettings, windowStyle, createNoWindow);
         }
 
         /// <summary>
-        /// Constructor
+        /// Store the settings
         /// </summary>
-        /// <param name="processSettings">Process settings</param>
-        /// <param name="workingDirectory">Working directory path</param>
-        /// <param name="createNoWindow">True to create no window, false to use a normal window</param>
-        public clsProcessRunner(clsProcessSettings processSettings, string workingDirectory, bool createNoWindow = false)
-        {
-            Initialize(processSettings, workingDirectory, ProcessWindowStyle.Normal, createNoWindow);
-        }
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="processSettings">Process settings</param>
-        /// <param name="windowStyle">Window style</param>
-        /// <param name="workingDirectory">Working directory path</param>
-        /// <param name="createNoWindow">True to create no window, false to use a normal window</param>
-        public clsProcessRunner(clsProcessSettings processSettings, ProcessWindowStyle windowStyle, string workingDirectory, bool createNoWindow = false)
-        {
-            Initialize(processSettings, workingDirectory, windowStyle, createNoWindow);
-        }
-
-        private void Initialize(clsProcessSettings processSettings, string workingDirectory, ProcessWindowStyle windowStyle, bool createNoWindow)
+        /// <param name="processSettings"></param>
+        /// <param name="windowStyle"></param>
+        /// <param name="createNoWindow"></param>
+        private void Initialize(clsProcessSettings processSettings, ProcessWindowStyle windowStyle, bool createNoWindow)
         {
 
             ThreadState = eThreadState.No;
             KeyName = processSettings.UniqueKey;
-            mProgramInfo = new clsProcessSettings(KeyName);
+
+            // Initially mProgramInfo will only contain the UniqueKey
+            // mNewProgramInfo has all of the program details
+            // mProgramInfo will be updated by UpdateThreadParameters in ProcessThread provided mUpdateRequired is true
+
+            mProgramInfo = new clsProcessSettings(processSettings.UniqueKey);
 
             mNewProgramInfo = processSettings;
 
-            WorkDir = workingDirectory;
             WindowStyle = windowStyle;
             CreateNoWindow = createNoWindow;
 
@@ -292,6 +288,97 @@ namespace ProgRunnerSvc
         }
 
         /// <summary>
+        /// Determine the best working directory path to use
+        /// </summary>
+        /// <param name="programInfo"></param>
+        /// <returns></returns>
+        private string DetermineWorkDir(clsProcessSettings programInfo)
+        {
+            try
+            {
+
+                if (!string.IsNullOrWhiteSpace(programInfo.WorkDir) && Directory.Exists(programInfo.WorkDir))
+                    return programInfo.WorkDir;
+
+                // Auto-determine the working directory
+                // Check whether we're running a program with mono
+                // Use a RegEx that matches .ProgramPath being mono or mono.exe or a path like /usr/local/bin/mono
+                // Note, when using mono, in MultiProgRunner.xml set "value" to the path to mono
+                // but specify the .NET Assembly to run at the start of "arguments")
+
+                string warningMsg;
+
+                var match = mMonoProgramMatcher.Match(programInfo.ProgramPath);
+                if (match.Success && programInfo.ProgramArguments.Length > 0)
+                {
+                    var spaceIndex = programInfo.ProgramArguments.IndexOf(' ');
+                    string dotNetAssemblyPath;
+
+                    if (spaceIndex <= 0)
+                        dotNetAssemblyPath = programInfo.ProgramArguments;
+                    else
+                    {
+                        dotNetAssemblyPath = programInfo.ProgramArguments.Substring(0, spaceIndex);
+                    }
+
+                    var dotNetAssemblyInfo = new FileInfo(dotNetAssemblyPath);
+                    if (dotNetAssemblyInfo.Directory == null)
+                    {
+                        warningMsg = "Unable to determine the parent directory of " + dotNetAssemblyPath;
+                        LogPathChangeInfo(dotNetAssemblyPath, dotNetAssemblyInfo);
+                    }
+                    else if (!dotNetAssemblyInfo.Directory.Exists)
+                    {
+                        warningMsg = string.Format("Parent directory of {0} does not exist", dotNetAssemblyPath);
+                        LogPathChangeInfo(dotNetAssemblyPath, dotNetAssemblyInfo);
+                    }
+                    else
+                    {
+                        return dotNetAssemblyInfo.Directory.FullName;
+                    }
+                }
+                else
+                {
+                    var exeInfo = new FileInfo(programInfo.ProgramPath);
+                    if (exeInfo.Directory == null)
+                    {
+                        warningMsg = "Unable to determine the parent directory of " + programInfo.ProgramPath;
+                        LogPathChangeInfo(programInfo.ProgramPath, exeInfo);
+                    }
+                    else if (!exeInfo.Directory.Exists)
+                    {
+                        warningMsg = string.Format("Parent directory of {0} does not exist", programInfo.ProgramPath);
+                        LogPathChangeInfo(programInfo.ProgramPath, exeInfo);
+                    }
+                    else
+                    {
+                        return exeInfo.Directory.FullName;
+                    }
+                }
+
+                LogTools.LogWarning(warningMsg + "; cannot determine the working directory for " + programInfo.UniqueKey);
+                return programInfo.WorkDir;
+            }
+            catch (Exception ex)
+            {
+                LogTools.LogWarning(string.Format("Error determining the working directory for {0}: {1}", programInfo.UniqueKey, ex.Message));
+                return programInfo.WorkDir;
+            }
+
+        }
+
+        /// <summary>
+        /// If path1 and path2 are not an exact match
+        /// </summary>
+        /// <param name="fileOrDirectoryPath"></param>
+        /// <param name="pathInfo"></param>
+        private void LogPathChangeInfo(string fileOrDirectoryPath, FileSystemInfo pathInfo)
+        {
+            if (!StringsMatch(fileOrDirectoryPath, pathInfo.FullName))
+                LogTools.LogMessage(String.Format("Note that {0} resolves to {1} on this system", fileOrDirectoryPath, pathInfo.FullName));
+
+        }
+        /// <summary>
         /// Start program as external process and monitor its state.
         /// </summary>
         private void ProcessThread()
@@ -326,7 +413,11 @@ namespace ProgRunnerSvc
                         }
 
                         mProcess.StartInfo.FileName = mProgramInfo.ProgramPath;
-                        mProcess.StartInfo.WorkingDirectory = WorkDir;
+
+                        var workingDirectory = DetermineWorkDir(mProgramInfo);
+
+                        mProcess.StartInfo.WorkingDirectory = workingDirectory;
+
                         mProcess.StartInfo.Arguments = mProgramInfo.ProgramArguments;
                         mProcess.StartInfo.CreateNoWindow = CreateNoWindow;
 
@@ -339,6 +430,12 @@ namespace ProgRunnerSvc
                         ThreadState = eThreadState.ProcessRunning;
                         PID = mProcess.Id;
                         LogTools.LogMessage("Started: " + KeyName + ", pID=" + PID);
+
+                        if (!mWorkDirLogged)
+                        {
+                            LogTools.LogMessage(string.Format("Working directory for {0} is {1}", KeyName, mProcess.StartInfo.WorkingDirectory));
+                            mWorkDirLogged = true;
+                        }
 
                         while (!(mThreadStopCommand || mProcess.HasExited))
                         {
@@ -464,6 +561,9 @@ namespace ProgRunnerSvc
                 if (string.IsNullOrWhiteSpace(mNewProgramInfo.RepeatMode))
                     mNewProgramInfo.RepeatMode = "No";
 
+                if (string.IsNullOrWhiteSpace(mNewProgramInfo.WorkDir))
+                    mNewProgramInfo.WorkDir = string.Empty;
+
                 if (mNewProgramInfo.HoldoffSeconds < 1)
                     mNewProgramInfo.HoldoffSeconds = 1;
 
@@ -514,6 +614,7 @@ namespace ProgRunnerSvc
 
                 if (!updateRepeatAndHoldoffOnly)
                 {
+                    mWorkDirLogged = false;
                     if (ThreadState == eThreadState.Idle)
                     {
                         if (StringsMatch(mNewProgramInfo.RepeatMode, "Repeat"))
@@ -550,6 +651,8 @@ namespace ProgRunnerSvc
 
                 mProgramInfo.ProgramPath = mNewProgramInfo.ProgramPath;
                 mProgramInfo.ProgramArguments = mNewProgramInfo.ProgramArguments;
+                mProgramInfo.WorkDir = mNewProgramInfo.WorkDir;
+
                 mProgramInfo.RepeatMode = mNewProgramInfo.RepeatMode;
                 mProgramInfo.HoldoffSeconds = mNewProgramInfo.HoldoffSeconds;
 

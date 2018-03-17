@@ -29,8 +29,12 @@ namespace ProgRunnerSvc
 
         /// <summary>
         /// Holdoff time, in seconds (not milliseconds)
+        /// <summary>
+        /// Working directory path
         /// </summary>
         public int HoldoffSeconds  { get; set; }
+        /// <remarks>If empty, the working directory is determined using ProgramPath</remarks>
+        public string WorkDir { get; set; }
 
         /// <summary>
         /// Constructor
