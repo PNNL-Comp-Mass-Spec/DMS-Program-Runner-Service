@@ -16,7 +16,7 @@ namespace ProgRunnerSvc
 
         private const string XML_PARAM_FILE_NAME = "MultiProgRunner.xml";
 
-        private readonly string mIniFileNamePath = string.Empty;
+        private readonly string mXmlParamFilePath = string.Empty;
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly FileSystemWatcher mFileWatcher;
@@ -54,7 +54,7 @@ namespace ProgRunnerSvc
                 if (fi.DirectoryName == null)
                     throw new DirectoryNotFoundException("Cannot determine the parent directory of " + fi.FullName);
 
-                mIniFileNamePath = Path.Combine(fi.DirectoryName, XML_PARAM_FILE_NAME);
+                mXmlParamFilePath = Path.Combine(fi.DirectoryName, XML_PARAM_FILE_NAME);
 
                 const string logFileNameBase = @"Logs\ProgRunner";
                 LogTools.CreateFileLogger(logFileNameBase);
@@ -62,9 +62,9 @@ namespace ProgRunnerSvc
                 var appVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 LogTools.LogMessage("=== MultiProgRunner v" + appVersion + " started =====");
 
-                if (!File.Exists(mIniFileNamePath))
+                if (!File.Exists(mXmlParamFilePath))
                 {
-                    LogTools.LogWarning("XML Parameter file not found: " + mIniFileNamePath);
+                    LogTools.LogWarning("XML Parameter file not found: " + mXmlParamFilePath);
                     LogTools.LogMessage("Please create the file then restart this application or service");
                     LogTools.FlushPendingMessages();
                     ConsoleMsgUtils.SleepSeconds(1);
@@ -160,17 +160,17 @@ namespace ProgRunnerSvc
 
             try
             {
-                if (string.IsNullOrWhiteSpace(mIniFileNamePath))
+                if (string.IsNullOrWhiteSpace(mXmlParamFilePath))
                     return;
 
-                programSettings = GetProgRunnerSettings(mIniFileNamePath);
+                programSettings = GetProgRunnerSettings(mXmlParamFilePath);
             }
             catch (Exception ex)
             {
                 if (passXMLFileParsingExceptionsToCaller)
                     throw;
 
-                LogTools.LogError("Error reading parameter file '" + mIniFileNamePath + "'", ex);
+                LogTools.LogError("Error reading parameter file '" + mXmlParamFilePath + "'", ex);
                 return;
             }
 
@@ -280,17 +280,17 @@ namespace ProgRunnerSvc
             LogTools.LogMessage("MultiProgRunner stopped");
         }
 
-        private List<clsProcessSettings> GetProgRunnerSettings(string iniFilePath)
+        private List<clsProcessSettings> GetProgRunnerSettings(string xmlFilePath)
         {
 
             var programSettings = new List<clsProcessSettings>();
 
             var sectionName = "";
 
-            if (string.IsNullOrWhiteSpace(iniFilePath) || !File.Exists(iniFilePath))
+            if (string.IsNullOrWhiteSpace(xmlFilePath) || !File.Exists(xmlFilePath))
                 return programSettings;
 
-            using (var fileStream = new FileStream(iniFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var fileStream = new FileStream(xmlFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var reader = XmlReader.Create(fileStream))
             {
                 while (reader.Read())
