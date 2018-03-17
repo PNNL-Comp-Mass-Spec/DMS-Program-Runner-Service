@@ -215,10 +215,8 @@ namespace ProgRunnerSvc
 
         public void StopThread()
         {
-            if (ThreadState == eThreadState.ProcessBroken || ThreadState == eThreadState.No)
-            {
+            if (mThread == null)
                 return;
-            }
 
             mThreadStopCommand = true;
             if (ThreadState == eThreadState.ProcessRunning)
