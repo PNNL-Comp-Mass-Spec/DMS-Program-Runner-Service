@@ -210,7 +210,9 @@ namespace ProgRunnerSvc
                         progRunners.Add(uniqueProgramKey, true);
 
                         mProgRunners.Add(uniqueProgramKey, oCProcessRunner);
-                        LogTools.LogMessage("Added program '" + uniqueProgramKey + "'");
+                        LogTools.LogMessage(string.Format(
+                                                "Added program '{0}': {1} {2}",
+                                                uniqueProgramKey, settingsEntry.ProgramPath, settingsEntry.ProgramArguments));
 
                         if (threadsProcessed < programSettings.Count)
                         {

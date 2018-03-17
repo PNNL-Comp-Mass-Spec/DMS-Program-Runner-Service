@@ -134,7 +134,7 @@ namespace ProgRunnerSvc
         /// </summary>
         public ProcessWindowStyle WindowStyle { get; private set; }
 
-#endregion
+        #endregion
 
         /// <summary>
         /// Constructor
@@ -194,6 +194,9 @@ namespace ProgRunnerSvc
             }
         }
 
+        /// <summary>
+        /// Start the thread
+        /// </summary>
         public void StartThread()
         {
             if (ThreadState == eThreadState.No)
@@ -213,6 +216,9 @@ namespace ProgRunnerSvc
 
         }
 
+        /// <summary>
+        /// Stop the thread
+        /// </summary>
         public void StopThread()
         {
             if (mThread == null)
@@ -227,14 +233,6 @@ namespace ProgRunnerSvc
                 {
                     mProcess.Kill();
                 }
-                //catch (System.ComponentModel.Win32Exception ex)
-                //{
-                //     ThrowConditionalException(ex, "Caught Win32Exception while trying to kill process.");
-                //}
-                //catch (System.InvalidOperationException ex)
-                //{
-                //     ThrowConditionalException(ex, "Caught InvalidOperationException while trying to kill thread.");
-                //}
                 catch (Exception ex)
                 {
                     LogTools.LogWarning("Exception killing process '" + KeyName + "': " + ex.Message);
@@ -276,6 +274,11 @@ namespace ProgRunnerSvc
 
         }
 
+        /// <summary>
+        /// Capitalize the first letter of modeName
+        /// </summary>
+        /// <param name="modeName"></param>
+        /// <returns></returns>
         private string CapitalizeMode(string modeName)
         {
             if (string.IsNullOrWhiteSpace(modeName))
@@ -439,7 +442,7 @@ namespace ProgRunnerSvc
                         mProcess.Start();
                         ThreadState = eThreadState.ProcessRunning;
                         PID = mProcess.Id;
-                        LogTools.LogMessage("Started: " + KeyName + ", pID=" + PID);
+                        LogTools.LogMessage(string.Format("Started: {0}, pID={1}", KeyName, PID));
 
                         if (!mWorkDirLogged)
                         {
@@ -481,10 +484,11 @@ namespace ProgRunnerSvc
                         ExitCode = mProcess.ExitCode;
                         mProcess.Close();
                         ThreadState = eThreadState.Idle;
+
                         if (StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                         {
                             // Process has exited; but its mode is repeat
-                            // Wait for m_Holdoff seconds, then set ThreadState to eThreadState.ProcessStarting
+                            // Wait for Holdoff seconds, then set ThreadState to eThreadState.ProcessStarting
                             var holdoffStartTime = DateTime.UtcNow;
 
                             while (true)
@@ -546,11 +550,22 @@ namespace ProgRunnerSvc
 
         }
 
+        /// <summary>
+        /// Sleep for the specified number of milliseconds
+        /// </summary>
+        /// <param name="milliseconds"></param>
         private static void SleepMilliseconds(int milliseconds)
         {
             ConsoleMsgUtils.SleepSeconds(milliseconds / 1000.0);
         }
 
+        /// <summary>
+        /// Compare two strings, optionally ignoring case
+        /// </summary>
+        /// <param name="item1"></param>
+        /// <param name="item2"></param>
+        /// <param name="ignoreCase"></param>
+        /// <returns>True if a match, false if not a match</returns>
         private static bool StringsMatch(string item1, string item2, bool ignoreCase = true)
         {
             return string.Equals(item1, item2, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -581,7 +596,7 @@ namespace ProgRunnerSvc
                 if (mNewProgramInfo.HoldoffSeconds < 1)
                     mNewProgramInfo.HoldoffSeconds = 1;
 
-                // Make sure the first letter of StrNewRepeat is capitalized and the other letters are lowercase
+                // Make sure the first letter of RepeatMode is capitalized and the other letters are lowercase
                 mNewProgramInfo.RepeatMode = CapitalizeMode(mNewProgramInfo.RepeatMode);
 
                 if (!onlyUpdateRepeatHoldoffAndDelay)
@@ -612,7 +627,7 @@ namespace ProgRunnerSvc
                     if (onlyUpdateRepeatHoldoffAndDelay)
                     {
                         // Only updating the Repeat and Holdoff values
-                        //Log the error (if not yet logged)
+                        // Log the error (if not yet logged)
                         if (!mWarnedInvalidRepeatMode)
                         {
                             mWarnedInvalidRepeatMode = true;
