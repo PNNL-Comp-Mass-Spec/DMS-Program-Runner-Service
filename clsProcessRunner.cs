@@ -53,6 +53,8 @@ namespace ProgRunnerSvc
 
         private readonly object oSync = 1;
 
+        private bool mInitialDelayApplied;
+
         private bool mUpdateRequired;
 
         private bool mWorkDirLogged;
@@ -426,6 +428,16 @@ namespace ProgRunnerSvc
                         else
                             mProcess.StartInfo.WindowStyle = WindowStyle;
 
+                        if (mProgramInfo.DelaySeconds > 0 && !mInitialDelayApplied)
+                        {
+                            LogTools.LogMessage(string.Format(
+                                                    "Delaying {0} seconds before starting {1}",
+                                                    mProgramInfo.DelaySeconds, mProgramInfo.UniqueKey));
+
+                            ConsoleMsgUtils.SleepSeconds(mProgramInfo.DelaySeconds);
+                        }
+                        mInitialDelayApplied = true;
+
                         mProcess.Start();
                         ThreadState = eThreadState.ProcessRunning;
                         PID = mProcess.Id;
@@ -483,8 +495,8 @@ namespace ProgRunnerSvc
 
                                 if (mUpdateRequired)
                                 {
-                                    // Update the current values for m_ProgramInfo.RepeatMode and m_ProgramInfo.HoldoffSeconds
-                                    // However, don't set mUpdateRequired to False since we're not updating the other parameters
+                                    // Update the current values for mProgramInfo.RepeatMode, mProgramInfo.HoldoffSeconds, and mProgramInfo.DelaySeconds
+                                    // However, don't set mUpdateRequired to False since we're not updating the other parameters at this time
                                     UpdateThreadParameters(true);
 
                                     if (!StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
@@ -546,7 +558,11 @@ namespace ProgRunnerSvc
             return string.Equals(item1, item2, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
-        private void UpdateThreadParameters(bool updateRepeatAndHoldoffOnly)
+        /// <summary>
+        /// Update thread parameters
+        /// </summary>
+        /// <param name="onlyUpdateRepeatHoldoffAndDelay">When true, only update Repeat, Holdoff, and Delay</param>
+        private void UpdateThreadParameters(bool onlyUpdateRepeatHoldoffAndDelay)
         {
             try
             {
@@ -570,7 +586,7 @@ namespace ProgRunnerSvc
                 // Make sure the first letter of StrNewRepeat is capitalized and the other letters are lowercase
                 mNewProgramInfo.RepeatMode = CapitalizeMode(mNewProgramInfo.RepeatMode);
 
-                if (!updateRepeatAndHoldoffOnly)
+                if (!onlyUpdateRepeatHoldoffAndDelay)
                 {
                     if (string.IsNullOrWhiteSpace(mNewProgramInfo.ProgramPath))
                     {
@@ -593,7 +609,7 @@ namespace ProgRunnerSvc
                 }
                 else
                 {
-                    if (updateRepeatAndHoldoffOnly)
+                    if (onlyUpdateRepeatHoldoffAndDelay)
                     {
                         // Only updating the Repeat and Holdoff values
                         //Log the error (if not yet logged)
@@ -612,8 +628,9 @@ namespace ProgRunnerSvc
                     }
                 }
 
-                if (!updateRepeatAndHoldoffOnly)
+                if (!onlyUpdateRepeatHoldoffAndDelay)
                 {
+                    mInitialDelayApplied = false;
                     mWorkDirLogged = false;
                     if (ThreadState == eThreadState.Idle)
                     {
@@ -655,6 +672,7 @@ namespace ProgRunnerSvc
 
                 mProgramInfo.RepeatMode = mNewProgramInfo.RepeatMode;
                 mProgramInfo.HoldoffSeconds = mNewProgramInfo.HoldoffSeconds;
+                mProgramInfo.DelaySeconds = mNewProgramInfo.DelaySeconds;
 
                 ExitCode = 0;
                 Monitor.Exit(oSync);

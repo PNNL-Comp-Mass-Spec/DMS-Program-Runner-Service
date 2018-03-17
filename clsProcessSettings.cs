@@ -5,6 +5,12 @@ namespace ProgRunnerSvc
     {
 
         protected string m_UniqueKey;
+        /// <summary>
+        /// Delay, in seconds, that the ProgRunner service will wait
+        /// before first starting this program after the service starts,
+        /// or after the XML file is reloaded
+        /// </summary>
+        public int DelaySeconds { get; set; }
 
         /// <summary>
         /// Unique name for this program
