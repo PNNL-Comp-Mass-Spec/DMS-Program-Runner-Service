@@ -592,10 +592,12 @@ namespace ProgRunnerSvc
                         LogTools.LogError("Process '" + KeyName + "' failed due to empty program name");
                     }
 
-                    if (!System.IO.File.Exists(mNewProgramInfo.ProgramPath))
+                    var exeFileInfo = new FileInfo(mNewProgramInfo.ProgramPath);
+                    if (!exeFileInfo.Exists)
                     {
                         ThreadState = eThreadState.ProcessBroken;
                         LogTools.LogError("Process '" + KeyName + "' failed due to missing program file: " + mNewProgramInfo.ProgramPath);
+                        LogPathChangeInfo(mNewProgramInfo.ProgramPath, exeFileInfo);
                     }
                 }
 
