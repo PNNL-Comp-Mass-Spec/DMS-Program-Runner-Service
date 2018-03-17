@@ -44,8 +44,7 @@ namespace ProgRunnerSvc
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="processName">Name of this process (used to prevent duplicate instances)</param>
-        public clsMainProg(string processName)
+        public clsMainProg()
         {
 
             try
@@ -73,25 +72,72 @@ namespace ProgRunnerSvc
                     return;
                 }
 
+                // ReSharper disable once RedundantNameQualifier
+                var sysInfo = new PRISM.SystemInfo();
+
                 // Check running processes to assure that only one instance of the ProgRunner is running at a given time
-                var progRunnerInstances = GetProcessesByName(processName);
+                var currentProcesses = sysInfo.GetProcesses();
+
+                var progRunnerInstances = new List<ProcessInfo>();
+
+                try
+                {
+
+                    var appPath = ProcessFilesOrFoldersBase.GetAppPath();
+                    var exeName = Path.GetFileName(appPath);
+
+                    foreach (var process in currentProcesses.Values)
+                    {
+
+                        if (string.Equals(process.ExeName, exeName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Matched the exe name of the process to exeName
+                            progRunnerInstances.Add(process);
+                        }
+                        else if (string.Equals(process.ExeName, "mono", StringComparison.OrdinalIgnoreCase) &&
+                                 process.Arguments.IndexOf(appPath, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            // Running mono, and arguments contains appPath
+                            progRunnerInstances.Add(process);
+                        }
+
+                        // Uncomment to see details of each process
+                        // Console.WriteLine(process.ToStringVerbose());
+
+                    }
+
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error examining running processes: " + ex.Message);
+                }
+
                 if (progRunnerInstances.Count > 1)
                 {
                     // Abort starting this ProgRunner since another instance is already running
                     var currentProcess = Process.GetCurrentProcess();
+
                     var existingPid = 0;
+                    var existingProcessName = string.Empty;
+
                     foreach (var runningProcess in progRunnerInstances)
                     {
-                        if (runningProcess.Key != currentProcess.Id)
+                        if (runningProcess.ProcessID != currentProcess.Id)
                         {
-                            existingPid = runningProcess.Key;
+                            existingPid = runningProcess.ProcessID;
+                            if (string.Equals(runningProcess.ProcessName, "mono", StringComparison.OrdinalIgnoreCase) && runningProcess.ArgumentList.Count > 0)
+                                existingProcessName = '"' + runningProcess.ProcessName + " " + runningProcess.ArgumentList[0] + '"';
+                            else
+                                existingProcessName = runningProcess.ProcessName;
+
                             break;
                         }
                     }
 
                     var msg = string.Format(
                         "Aborting initialization of this Program Runner because process {0} with pID {1} is already running",
-                        processName, existingPid);
+                        existingProcessName, existingPid);
 
                     LogTools.LogWarning(msg);
                     LogTools.FlushPendingMessages();
@@ -126,27 +172,6 @@ namespace ProgRunnerSvc
             {
                 LogTools.LogError("Failed to initialize clsMainProg", ex);
             }
-        }
-
-        private Dictionary<int, Process> GetProcessesByName(string processName)
-        {
-            var processes = new Dictionary<int, Process>();
-
-            try
-            {
-                var processInstances = Process.GetProcessesByName(processName);
-
-                foreach (var runningProcess in processInstances)
-                {
-                    processes.Add(runningProcess.Id, runningProcess);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTools.LogError("Error in GetProcessesByName", ex);
-            }
-
-            return processes;
         }
 
         public void StartAllProgRunners()
@@ -345,7 +370,7 @@ namespace ProgRunnerSvc
                                         ProgramPath = GetAttributeSafe(reader, "value"),
                                         ProgramArguments = GetAttributeSafe(reader, "arguments"),
                                         RepeatMode = GetAttributeSafe(reader, "run", "Once"),
-                                        WorkDir =  GetAttributeSafe(reader, "workdir", "")
+                                        WorkDir = GetAttributeSafe(reader, "workdir", "")
                                     };
 
                                     var holdOffSecondsText = GetAttributeSafe(reader, "holdoff", "300");

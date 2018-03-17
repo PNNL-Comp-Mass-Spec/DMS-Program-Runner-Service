@@ -11,7 +11,7 @@ namespace ProgRunnerApp
     /// </summary>
     class Program
     {
-        public const string PROGRAM_DATE = "March 16, 2018";
+        public const string PROGRAM_DATE = "March 17, 2018";
 
         static int mMaxRuntimeMinutes;
 
@@ -54,7 +54,7 @@ namespace ProgRunnerApp
 
                 Console.WriteLine();
 
-                var myProgRunner = new clsMainProg("ProgRunnerApp");
+                var myProgRunner = new clsMainProg();
                 if (myProgRunner.StartupAborted)
                     return -1;
 

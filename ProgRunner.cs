@@ -14,7 +14,7 @@ namespace ProgRunnerSvc
 
             try
             {
-                mProgRunner = new clsMainProg("ProgRunnerSvc");
+                mProgRunner = new clsMainProg();
                 mAbortStart = mProgRunner.StartupAborted;
             }
             catch (Exception)
