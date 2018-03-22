@@ -72,72 +72,12 @@ namespace ProgRunnerSvc
                     return;
                 }
 
-                // ReSharper disable once RedundantNameQualifier
-                var sysInfo = new PRISM.SystemInfo();
-
-                // Check running processes to assure that only one instance of the ProgRunner is running at a given time
-                var currentProcesses = sysInfo.GetProcesses();
-
-                var progRunnerInstances = new List<ProcessInfo>();
-
-                try
+                var multipleProgRunnersFound = ProgRunnerAlreadyRunning(out var existingProcessId, out var existingProcessName);
+                if (multipleProgRunnersFound)
                 {
-
-                    var appPath = ProcessFilesOrFoldersBase.GetAppPath();
-                    var exeName = Path.GetFileName(appPath);
-
-                    foreach (var process in currentProcesses.Values)
-                    {
-
-                        if (string.Equals(process.ExeName, exeName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            // Matched the exe name of the process to exeName
-                            progRunnerInstances.Add(process);
-                        }
-                        else if (string.Equals(process.ExeName, "mono", StringComparison.OrdinalIgnoreCase) &&
-                                 process.Arguments.IndexOf(appPath, StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            // Running mono, and arguments contains appPath
-                            progRunnerInstances.Add(process);
-                        }
-
-                        // Uncomment to see details of each process
-                        // Console.WriteLine(process.ToStringVerbose());
-
-                    }
-
-
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error examining running processes: " + ex.Message);
-                }
-
-                if (progRunnerInstances.Count > 1)
-                {
-                    // Abort starting this ProgRunner since another instance is already running
-                    var currentProcess = Process.GetCurrentProcess();
-
-                    var existingPid = 0;
-                    var existingProcessName = string.Empty;
-
-                    foreach (var runningProcess in progRunnerInstances)
-                    {
-                        if (runningProcess.ProcessID != currentProcess.Id)
-                        {
-                            existingPid = runningProcess.ProcessID;
-                            if (string.Equals(runningProcess.ProcessName, "mono", StringComparison.OrdinalIgnoreCase) && runningProcess.ArgumentList.Count > 0)
-                                existingProcessName = '"' + runningProcess.ProcessName + " " + runningProcess.ArgumentList[0] + '"';
-                            else
-                                existingProcessName = runningProcess.ProcessName;
-
-                            break;
-                        }
-                    }
-
                     var msg = string.Format(
                         "Aborting initialization of this Program Runner because process {0} with pID {1} is already running",
-                        existingProcessName, existingPid);
+                        existingProcessName, existingProcessId);
 
                     LogTools.LogWarning(msg);
                     LogTools.FlushPendingMessages();
@@ -437,6 +377,114 @@ namespace ProgRunnerSvc
             {
                 return defaultValue;
             }
+        }
+
+        private bool ProgRunnerAlreadyRunning(out int existingProcessId, out string existingProcessName)
+        {
+            const int MAX_ATTEMPTS = 3;
+            const int DELAY_TIME_SECONDS = 2;
+
+            var iteration = 0;
+            while (true)
+            {
+                iteration++;
+
+                var multipleProgRunnersFound = ProgRunnerAlreadyRunningWork(out existingProcessId, out existingProcessName);
+                if (!multipleProgRunnersFound)
+                    return false;
+
+                var currentProcess = Process.GetCurrentProcess();
+                if (currentProcess.Id >= existingProcessId || iteration >= MAX_ATTEMPTS)
+                    return true;
+
+                // Wait 2 seconds, then check again
+                // This is done to handle cases where two program runners start at the same time
+
+                ConsoleMsgUtils.ShowWarning(string.Format(
+                                                "Multiple instances of the Program Runner were found; " +
+                                                "waiting {0} seconds then checking again since this instance's ProgramID ({1}) is less than {2}",
+                                                DELAY_TIME_SECONDS, currentProcess.Id, existingProcessId));
+
+                ConsoleMsgUtils.SleepSeconds(DELAY_TIME_SECONDS);
+            }
+
+        }
+
+        /// <summary>
+        /// Examine all running processes to see if the ProgRunner is already running
+        /// </summary>
+        /// <returns>True if multiple program runners are found, otherwise false</returns>
+        private bool ProgRunnerAlreadyRunningWork(out int existingProcessId, out string existingProcessName)
+        {
+            existingProcessId = 0;
+            existingProcessName = string.Empty;
+
+            var sysInfo = new SystemInfo();
+
+            // Check running processes to assure that only one instance of the ProgRunner is running at a given time
+            var currentProcesses = sysInfo.GetProcesses();
+
+            var progRunnerInstances = new List<ProcessInfo>();
+
+            try
+            {
+
+                var appPath = ProcessFilesOrFoldersBase.GetAppPath();
+                var exeName = Path.GetFileName(appPath);
+
+                foreach (var process in currentProcesses.Values)
+                {
+
+                    if (string.Equals(process.ExeName, exeName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Matched the exe name of the process to exeName
+                        progRunnerInstances.Add(process);
+                    }
+                    else if (string.Equals(process.ExeName, "mono", StringComparison.OrdinalIgnoreCase) &&
+                             exeName != null &&
+                             process.ArgumentList.Count > 0 &&
+                             process.ArgumentList[0].IndexOf(exeName, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        // Running mono, and the first argument contains exeName
+                        progRunnerInstances.Add(process);
+                    }
+
+                    // Uncomment to see details of each process
+                    // Console.WriteLine(process.ToStringVerbose());
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error examining running processes: " + ex.Message);
+            }
+
+            if (progRunnerInstances.Count <= 1)
+            {
+                return false;
+            }
+
+
+            // Abort starting this ProgRunner since another instance is already running
+            var currentProcess = Process.GetCurrentProcess();
+
+            foreach (var runningProcess in progRunnerInstances)
+            {
+                if (runningProcess.ProcessID != currentProcess.Id)
+                {
+                    existingProcessId = runningProcess.ProcessID;
+                    if (string.Equals(runningProcess.ProcessName, "mono", StringComparison.OrdinalIgnoreCase) && runningProcess.ArgumentList.Count > 0)
+                        existingProcessName = string.Format("\"{0} {1}\"", runningProcess.ProcessName, runningProcess.ArgumentList[0]);
+                    else
+                        existingProcessName = runningProcess.ProcessName;
+
+                    break;
+                }
+            }
+
+            return true;
+
         }
 
         private void UpdateSettingsFromFile()
