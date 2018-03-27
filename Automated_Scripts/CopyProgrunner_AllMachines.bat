@@ -32,13 +32,7 @@ call CopyProgrunnerWork.bat Pub-15
 call CopyProgrunnerWork.bat Pub-16
 call CopyProgrunnerWork.bat Pub-17
 
-echo Update Pub-2*
-rem Offline: Pub-24
-rem Offline: Pub-25
-rem Offline: Pub-26
-rem Offline: Pub-27
-rem Offline: Pub-28
-rem Offline: Pub-29
+
 
 echo Update Pub-3*
 rem Offline: Pub-30
@@ -129,7 +123,7 @@ call CopyProgrunnerWork.bat Gigasax
 call CopyProgrunnerWork.bat Granite
 call CopyProgrunnerWork.bat Mallard
 rem Offline: Peaks1
-call CopyProgrunnerWork.bat Peaks2
+rem Offline: Peaks2
 call CopyProgrunnerWork.bat Proteinseqs
 call CopyProgrunnerWork.bat Protoapps
 

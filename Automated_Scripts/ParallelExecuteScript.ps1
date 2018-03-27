@@ -16,9 +16,12 @@ Param($ScriptFile = $(Read-Host "Enter the script file"),
     $SleepTimer = 500,
     $MaxWaitAtEnd = 600,
     $OutputType = "Text")       # "Text" or "GridView"
-   
-$Computers = Get-Content $ComputerList
- 
+
+# Populate an array using the computer names in the text file
+# While reading, removing empty lines and lines that start with #
+# Finally, sort the computer names
+$Computers = Get-Content $ComputerList | ? {$_.trim() -ne "" } | ? {$_.trim().Substring(0,1) -ne "#" } | sort -uniq
+
 "Killing existing jobs . . ."
 Get-Job | Remove-Job -Force
 "Done."
@@ -27,7 +30,11 @@ $i = 0
 $ExecutionStart = (Get-Date)
 $EffectiveMaxThreads = $MaxThreads
 
-ForEach ($Computer in $Computers){
+ForEach ($Computer in $Computers) {
+
+	If ([string]::IsNullOrEmpty($Computer))
+		{continue}
+
 	$RunningThreads = $(Get-Job -state running).count
     While ($(Get-Job -state running).count -ge $EffectiveMaxThreads){
         Write-Progress  -Activity "Creating Server List" `
