@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sections>
+	<section name="programs">
+        <item key="Analysis1" value="/usr/bin/mono" arguments="/opt/DMS_Programs/AnalysisManager1/AnalysisManagerProg.exe /Offline" workdir="" run="Repeat" holdoff="120" delay="0"/>
+        <item key="Analysis2" value="/usr/bin/mono" arguments="/opt/DMS_Programs/AnalysisManager2/AnalysisManagerProg.exe /Offline" workdir="" run="Repeat" holdoff="120" delay="10"/>
+	</section>
+	<section name="programs_Disabled">
+        <item key="Analysis3" value="C:\DMS_Programs\AnalysisToolManager3\StartManager3.bat" arguments="" run="Repeat" holdoff="300" />
+        <item key="Analysis4" value="C:\DMS_Programs\AnalysisToolManager4\StartManager4.bat" arguments="" run="Repeat" holdoff="300" />
+	</section>
+</sections>
+
