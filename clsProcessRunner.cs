@@ -140,7 +140,7 @@ namespace ProgRunnerSvc
         /// Constructor
         /// </summary>
         /// <param name="processSettings">Process settings</param>
-        /// <param name="windowStyle">Window style (defeaults to Normal)</param>
+        /// <param name="windowStyle">Window style (defaults to Normal)</param>
         /// <param name="createNoWindow">True to create no window, false to use a normal window; defaults to false</param>
         public clsProcessRunner(clsProcessSettings processSettings, ProcessWindowStyle windowStyle = ProcessWindowStyle.Normal, bool createNoWindow = false)
         {

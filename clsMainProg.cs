@@ -141,8 +141,8 @@ namespace ProgRunnerSvc
 
             LogTools.LogMessage("Updating from file");
 
-            // Make a list of the currently running progrunners
-            // Keys are the UniqueKey for each progrunner, value is initially False but is set to true for each manager processed
+            // Make a list of the currently running prog runners
+            // Keys are the UniqueKey for each prog runner, value is initially False but is set to true for each manager processed
             var progRunners = new Dictionary<string, bool>();
 
             foreach (var uniqueProgramKey in mProgRunners.Keys)
@@ -328,7 +328,7 @@ namespace ProgRunnerSvc
                                     {
                                         LogTools.LogError("Invalid \"delay\" value for process '" + keyName + "': " + delaySecondsText +
                                                           "; this value must be an integer (defining the delay time, in seconds, " +
-                                                          "after the progrunner first starts, that it will wait to start this process).  Will assume 0");
+                                                          "after the prog runner first starts, that it will wait to start this process).  Will assume 0");
                                         delaySeconds = 0;
                                     }
 
