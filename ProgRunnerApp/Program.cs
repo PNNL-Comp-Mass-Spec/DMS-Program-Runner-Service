@@ -11,7 +11,7 @@ namespace ProgRunnerApp
     /// </summary>
     class Program
     {
-        public const string PROGRAM_DATE = "March 22, 2018";
+        public const string PROGRAM_DATE = "September 21, 2018";
 
         static int mMaxRuntimeMinutes;
 
@@ -56,7 +56,11 @@ namespace ProgRunnerApp
 
                 var myProgRunner = new clsMainProg();
                 if (myProgRunner.StartupAborted)
-                    return -1;
+                {
+                    // An error message has already been logged
+                    // Using a return code of 0 to prevent cron from sending a mail message every 5 minutes
+                    return 0;
+                }
 
                 // Start the ProgRunner
                 myProgRunner.StartAllProgRunners();
