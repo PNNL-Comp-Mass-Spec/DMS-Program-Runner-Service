@@ -49,7 +49,7 @@ namespace ProgRunnerSvc
 
             try
             {
-                var fi = new FileInfo(ProcessFilesOrFoldersBase.GetAppPath());
+                var fi = new FileInfo(ProcessFilesOrDirectoriesBase.GetAppPath());
                 if (fi.DirectoryName == null)
                     throw new DirectoryNotFoundException("Cannot determine the parent directory of " + fi.FullName);
 
@@ -429,7 +429,7 @@ namespace ProgRunnerSvc
             try
             {
 
-                var appPath = ProcessFilesOrFoldersBase.GetAppPath();
+                var appPath = ProcessFilesOrDirectoriesBase.GetAppPath();
                 var exeName = Path.GetFileName(appPath);
 
                 foreach (var process in currentProcesses.Values)
