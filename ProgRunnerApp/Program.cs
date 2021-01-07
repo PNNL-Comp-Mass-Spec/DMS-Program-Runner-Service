@@ -7,7 +7,7 @@ using PRISM;
 namespace ProgRunnerApp
 {
     /// <summary>
-    /// This program starts an instance of the DMS Program Runner
+    /// This program starts an instance of the DMS Program Runner service
     /// </summary>
     class Program
     {

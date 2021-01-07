@@ -12,6 +12,8 @@ namespace ProgRunnerSvc
 {
     public class clsMainProg : IDisposable
     {
+        // Ignore Spelling: workdir
+
         private const int SETTINGS_FILE_UPDATE_DELAY_MSEC = 1500;
 
         private const string XML_PARAM_FILE_NAME = "MultiProgRunner.xml";
@@ -24,7 +26,6 @@ namespace ProgRunnerSvc
         /// <summary>
         /// Keys are the program name; values are the ProcessRunner object
         /// </summary>
-        /// <remarks></remarks>
         private readonly Dictionary<string, clsProcessRunner> mProgRunners;
 
         // When the .XML settings file is changed, mUpdateSettingsFromFile is set to True and mUpdateSettingsRequestTime is set to the current date/time

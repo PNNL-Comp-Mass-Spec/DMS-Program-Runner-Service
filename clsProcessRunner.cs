@@ -13,6 +13,8 @@ namespace ProgRunnerSvc
     /// </summary>
     class clsProcessRunner
     {
+        // Ignore Spelling: usr
+
         /// <summary>
         /// Thread states
         /// </summary>
