@@ -9,13 +9,18 @@ namespace ProgRunnerApp
     /// <summary>
     /// This program starts an instance of the DMS Program Runner service
     /// </summary>
-    class Program
+    internal static class Program
     {
-        public const string PROGRAM_DATE = "March 5, 2019";
+        // Ignore Spelling: cron
 
-        static int mMaxRuntimeMinutes;
+        public const string PROGRAM_DATE = "January 7, 2021";
 
-        static int Main(string[] args)
+        private static int mMaxRuntimeMinutes;
+
+        /// <summary>
+        /// The main entry point for the service
+        /// </summary>
+        private static int Main()
         {
 
             mMaxRuntimeMinutes = 0;

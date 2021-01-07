@@ -131,11 +131,8 @@ namespace ProgRunnerSvc
 
                 programSettings = GetProgRunnerSettings(mXmlParamFilePath);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!passXMLFileParsingExceptionsToCaller)
             {
-                if (passXMLFileParsingExceptionsToCaller)
-                    throw;
-
                 LogTools.LogError("Error reading parameter file '" + mXmlParamFilePath + "'", ex);
                 return;
             }
@@ -157,7 +154,7 @@ namespace ProgRunnerSvc
             foreach (var settingsEntry in programSettings)
             {
 
-                threadsProcessed += 1;
+                threadsProcessed++;
 
                 var uniqueProgramKey = settingsEntry.UniqueKey;
                 if (string.IsNullOrWhiteSpace(uniqueProgramKey))
@@ -253,7 +250,7 @@ namespace ProgRunnerSvc
 
             var programSettings = new List<clsProcessSettings>();
 
-            var sectionName = "";
+            var sectionName = string.Empty;
 
             if (string.IsNullOrWhiteSpace(xmlFilePath) || !File.Exists(xmlFilePath))
                 return programSettings;
@@ -295,7 +292,7 @@ namespace ProgRunnerSvc
                             if (reader.Depth == 2 && sectionName == "programs" && reader.Name == "item")
                             {
 
-                                var keyName = "";
+                                var keyName = string.Empty;
 
                                 try
                                 {
@@ -311,7 +308,7 @@ namespace ProgRunnerSvc
                                         ProgramPath = GetAttributeSafe(reader, "value"),
                                         ProgramArguments = GetAttributeSafe(reader, "arguments"),
                                         RepeatMode = GetAttributeSafe(reader, "run", "Once"),
-                                        WorkDir = GetAttributeSafe(reader, "workdir", "")
+                                        WorkDir = GetAttributeSafe(reader, "workdir", string.Empty)
                                     };
 
                                     var holdOffSecondsText = GetAttributeSafe(reader, "holdoff", "300");
@@ -401,10 +398,10 @@ namespace ProgRunnerSvc
                 // Wait 2 seconds, then check again
                 // This is done to handle cases where two program runners start at the same time
 
-                ConsoleMsgUtils.ShowWarning(string.Format(
-                                                "Multiple instances of the Program Runner were found; " +
-                                                "waiting {0} seconds then checking again since this instance's ProgramID ({1}) is less than {2}",
-                                                DELAY_TIME_SECONDS, currentProcess.Id, existingProcessId));
+                ConsoleMsgUtils.ShowWarning(
+                    "Multiple instances of the Program Runner were found; " +
+                    "waiting {0} seconds then checking again since this instance's ProgramID ({1}) is less than {2}",
+                    DELAY_TIME_SECONDS, currentProcess.Id, existingProcessId);
 
                 ConsoleMsgUtils.SleepSeconds(DELAY_TIME_SECONDS);
             }

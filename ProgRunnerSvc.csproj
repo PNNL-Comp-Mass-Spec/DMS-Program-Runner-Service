@@ -48,6 +48,7 @@
     <Compile Include="clsMainProg.cs" />
     <Compile Include="clsProcessRunner.cs" />
     <Compile Include="clsProcessSettings.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="ProgRunner.cs">
       <SubType>Component</SubType>
     </Compile>

@@ -6,12 +6,14 @@ using System.Threading;
 using PRISM;
 using PRISM.Logging;
 
+// ReSharper disable UnusedMember.Global
+
 namespace ProgRunnerSvc
 {
     /// <summary>
     /// This class runs a single program as an external process and monitors it with an internal thread
     /// </summary>
-    class clsProcessRunner
+    internal class clsProcessRunner
     {
         // Ignore Spelling: usr
 
@@ -280,7 +282,6 @@ namespace ProgRunnerSvc
         /// Capitalize the first letter of modeName
         /// </summary>
         /// <param name="modeName"></param>
-        /// <returns></returns>
         private string CapitalizeMode(string modeName)
         {
             if (string.IsNullOrWhiteSpace(modeName))
@@ -296,7 +297,6 @@ namespace ProgRunnerSvc
         /// Determine the best working directory path to use
         /// </summary>
         /// <param name="programInfo"></param>
-        /// <returns></returns>
         private string DetermineWorkDir(clsProcessSettings programInfo)
         {
             try
@@ -320,7 +320,9 @@ namespace ProgRunnerSvc
                     string dotNetAssemblyPath;
 
                     if (spaceIndex <= 0)
+                    {
                         dotNetAssemblyPath = programInfo.ProgramArguments;
+                    }
                     else
                     {
                         dotNetAssemblyPath = programInfo.ProgramArguments.Substring(0, spaceIndex);
@@ -392,10 +394,8 @@ namespace ProgRunnerSvc
 
             LogTools.LogMessage("Thread started: " + KeyName);
 
-            while (true)
+            while (!mThreadStopCommand)
             {
-                if (mThreadStopCommand)
-                    break;
 
                 if (mUpdateRequired)
                 {
@@ -493,7 +493,7 @@ namespace ProgRunnerSvc
                             // Wait for Holdoff seconds, then set ThreadState to eThreadState.ProcessStarting
                             var holdoffStartTime = DateTime.UtcNow;
 
-                            while (true)
+                            do
                             {
                                 SleepMilliseconds(REPEAT_HOLDOFF_SLEEP_TIME_MSEC);
 
@@ -506,10 +506,8 @@ namespace ProgRunnerSvc
                                     if (!StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                                         break;
                                 }
-
-                                if (DateTime.UtcNow.Subtract(holdoffStartTime).TotalSeconds >= mProgramInfo.HoldoffSeconds)
-                                    break;
                             }
+                            while (DateTime.UtcNow.Subtract(holdoffStartTime).TotalSeconds < mProgramInfo.HoldoffSeconds);
 
                             if (StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                             {
