@@ -58,7 +58,6 @@ namespace ProgRunnerSvc
             {
                 // Ignore errors
             }
-
         }
     }
 }

@@ -47,7 +47,6 @@ namespace ProgRunnerSvc
         /// </summary>
         public clsMainProg()
         {
-
             try
             {
                 var fi = new FileInfo(ProcessFilesOrDirectoriesBase.GetAppPath());
@@ -107,7 +106,6 @@ namespace ProgRunnerSvc
                 mSettingsFileUpdateTimer = new System.Timers.Timer(250);
                 mSettingsFileUpdateTimer.Elapsed += SettingsFileUpdateTimer_Elapsed;
                 mSettingsFileUpdateTimer.Start();
-
             }
             catch (Exception ex)
             {
@@ -153,7 +151,6 @@ namespace ProgRunnerSvc
 
             foreach (var settingsEntry in programSettings)
             {
-
                 threadsProcessed++;
 
                 var uniqueProgramKey = settingsEntry.UniqueKey;
@@ -184,7 +181,6 @@ namespace ProgRunnerSvc
                             var delayTimeSec = 1 + random.NextDouble();
                             ConsoleMsgUtils.SleepSeconds(delayTimeSec);
                         }
-
                     }
                     else
                     {
@@ -200,7 +196,6 @@ namespace ProgRunnerSvc
                 {
                     LogTools.LogError("Error in UpdateProgRunnersFromFile updating process '" + uniqueProgramKey + "': " + ex.Message);
                 }
-
             }
 
             try
@@ -225,13 +220,11 @@ namespace ProgRunnerSvc
                     mProgRunners.Remove(uniqueProgramKey);
                     LogTools.LogMessage("Deleted program '" + uniqueProgramKey + "'");
                 }
-
             }
             catch (Exception ex)
             {
                 LogTools.LogError("Error in UpdateProgRunnersFromFile removing old processes: " + ex.Message);
             }
-
         }
 
         public void StopAllProgRunners()
@@ -247,7 +240,6 @@ namespace ProgRunnerSvc
 
         private List<clsProcessSettings> GetProgRunnerSettings(string xmlFilePath)
         {
-
             var programSettings = new List<clsProcessSettings>();
 
             var sectionName = string.Empty;
@@ -291,7 +283,6 @@ namespace ProgRunnerSvc
 
                             if (reader.Depth == 2 && sectionName == "programs" && reader.Name == "item")
                             {
-
                                 var keyName = string.Empty;
 
                                 try
@@ -350,9 +341,7 @@ namespace ProgRunnerSvc
                                 sectionName = string.Empty;
 
                             break;
-
                     }
-
                 }
             }
 
@@ -405,7 +394,6 @@ namespace ProgRunnerSvc
 
                 ConsoleMsgUtils.SleepSeconds(DELAY_TIME_SECONDS);
             }
-
         }
 
         /// <summary>
@@ -426,13 +414,11 @@ namespace ProgRunnerSvc
 
             try
             {
-
                 var appPath = ProcessFilesOrDirectoriesBase.GetAppPath();
                 var exeName = Path.GetFileName(appPath);
 
                 foreach (var process in currentProcesses.Values)
                 {
-
                     if (string.Equals(process.ExeName, exeName, StringComparison.OrdinalIgnoreCase))
                     {
                         // Matched the exe name of the process to exeName
@@ -451,7 +437,6 @@ namespace ProgRunnerSvc
                     // Console.WriteLine(process.ToStringVerbose());
 
                 }
-
             }
             catch (Exception ex)
             {
@@ -462,7 +447,6 @@ namespace ProgRunnerSvc
             {
                 return false;
             }
-
 
             // Abort starting this ProgRunner since another instance is already running
             var currentProcess = Process.GetCurrentProcess();
@@ -482,17 +466,14 @@ namespace ProgRunnerSvc
             }
 
             return true;
-
         }
 
         private void UpdateSettingsFromFile()
         {
-
             const int MAX_READ_ATTEMPTS = 3;
 
             for (var iteration = 1; iteration <= MAX_READ_ATTEMPTS; iteration++)
             {
-
                 LogTools.LogMessage("File changed");
 
                 // When file was written program gets few events.
@@ -504,18 +485,14 @@ namespace ProgRunnerSvc
                 }
                 catch (Exception ex)
                 {
-
                     if (iteration < MAX_READ_ATTEMPTS)
                         LogTools.LogError("Error reading XML file (will try again): " + ex.Message);
                     else
                         LogTools.LogError(string.Format("Error reading XML file (tried {0} times): {1}", MAX_READ_ATTEMPTS, ex.Message));
-
                 }
 
                 ConsoleMsgUtils.SleepSeconds(1);
-
             }
-
         }
 
         public void Dispose()
@@ -556,6 +533,5 @@ namespace ProgRunnerSvc
                 }
             }
         }
-
     }
 }

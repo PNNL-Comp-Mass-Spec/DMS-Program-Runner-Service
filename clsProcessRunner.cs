@@ -160,7 +160,6 @@ namespace ProgRunnerSvc
         /// <param name="createNoWindow"></param>
         private void Initialize(clsProcessSettings processSettings, ProcessWindowStyle windowStyle, bool createNoWindow)
         {
-
             ThreadState = ThreadStates.No;
             KeyName = processSettings.UniqueKey;
 
@@ -217,7 +216,6 @@ namespace ProgRunnerSvc
                     LogTools.LogError("Failed to create thread: " + KeyName, ex);
                 }
             }
-
         }
 
         /// <summary>
@@ -273,9 +271,7 @@ namespace ProgRunnerSvc
                 {
                     LogTools.LogError("Failed to stop thread '" + KeyName + "'", ex);
                 }
-
             }
-
         }
 
         /// <summary>
@@ -301,7 +297,6 @@ namespace ProgRunnerSvc
         {
             try
             {
-
                 if (!string.IsNullOrWhiteSpace(programInfo.WorkDir) && Directory.Exists(programInfo.WorkDir))
                     return programInfo.WorkDir;
 
@@ -371,7 +366,6 @@ namespace ProgRunnerSvc
                 LogTools.LogWarning(string.Format("Error determining the working directory for {0}: {1}", programInfo.UniqueKey, ex.Message));
                 return programInfo.WorkDir;
             }
-
         }
 
         /// <summary>
@@ -383,7 +377,6 @@ namespace ProgRunnerSvc
         {
             if (!StringsMatch(fileOrDirectoryPath, pathInfo.FullName))
                 LogTools.LogMessage(String.Format("Note that {0} resolves to {1} on this system", fileOrDirectoryPath, pathInfo.FullName));
-
         }
         /// <summary>
         /// Start program as external process and monitor its state.
@@ -396,7 +389,6 @@ namespace ProgRunnerSvc
 
             while (!mThreadStopCommand)
             {
-
                 if (mUpdateRequired)
                 {
                     // Parameters have changed; update them
@@ -471,7 +463,6 @@ namespace ProgRunnerSvc
                         {
                             LogTools.LogMessage("Stopped: " + KeyName);
                         }
-
                     }
                     catch (Exception ex)
                     {
@@ -518,13 +509,11 @@ namespace ProgRunnerSvc
                             {
                                 ThreadState = ThreadStates.Idle;
                             }
-
                         }
                         else
                         {
                             SleepMilliseconds(mMonitorIntervalMsec);
                         }
-
                     }
                     catch (ThreadAbortException)
                     {
@@ -537,7 +526,6 @@ namespace ProgRunnerSvc
                         ThreadState = ThreadStates.ProcessBroken;
                         return;
                     }
-
                 }
                 else
                 {
@@ -547,7 +535,6 @@ namespace ProgRunnerSvc
 
             ThreadState = ThreadStates.No;
             LogTools.LogMessage("Thread stopped: " + KeyName);
-
         }
 
         /// <summary>
@@ -697,6 +684,5 @@ namespace ProgRunnerSvc
                 ConsoleMsgUtils.ShowWarning("Error updating thread parameters: " + ex.Message);
             }
         }
-
     }
 }

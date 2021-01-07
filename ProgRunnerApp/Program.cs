@@ -22,7 +22,6 @@ namespace ProgRunnerApp
         /// </summary>
         private static int Main()
         {
-
             mMaxRuntimeMinutes = 0;
 
             // Parse the command line arguments
@@ -78,7 +77,6 @@ namespace ProgRunnerApp
                 ConsoleMsgUtils.ShowWarning("Unable to start ProgRunner: " + ex.Message);
                 return -1;
             }
-
         }
 
         private static void MonitorProgRunner(clsMainProg myProgRunner)
@@ -96,7 +94,6 @@ namespace ProgRunnerApp
                     if (mMaxRuntimeMinutes > 0 && DateTime.UtcNow.Subtract(startTime).TotalMinutes > mMaxRuntimeMinutes)
                         continueLooping = false;
                 }
-
             }
             catch (Exception ex)
             {
@@ -112,7 +109,6 @@ namespace ProgRunnerApp
             {
                 ShowErrorMessage("Error stopping the ProgRunner", ex);
             }
-
         }
 
         private static string GetAppVersion()
@@ -221,13 +217,11 @@ namespace ProgRunnerApp
 
                 // Delay for 1 second in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
                 ConsoleMsgUtils.SleepSeconds(1);
-
             }
             catch (Exception ex)
             {
                 ShowErrorMessage("Error displaying the program syntax", ex);
             }
-
         }
     }
 }

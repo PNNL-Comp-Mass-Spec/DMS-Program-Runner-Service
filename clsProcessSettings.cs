@@ -3,7 +3,6 @@ namespace ProgRunnerSvc
 {
     internal class clsProcessSettings
     {
-
         /// <summary>
         /// Delay, in seconds, that the ProgRunner service will wait
         /// before first starting this program after the service starts,
