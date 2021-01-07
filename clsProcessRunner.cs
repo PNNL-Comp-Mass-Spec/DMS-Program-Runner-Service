@@ -20,7 +20,7 @@ namespace ProgRunnerSvc
         /// <summary>
         /// Thread states
         /// </summary>
-        public enum eThreadState
+        public enum ThreadStates
         {
             No,
             ProcessBroken,
@@ -55,7 +55,7 @@ namespace ProgRunnerSvc
         /// </summary>
         private int mMonitorIntervalMsec = 1000;
 
-        private readonly object oSync = 1;
+        private readonly object SyncObject = 1;
 
         private bool mInitialDelayApplied;
 
@@ -115,7 +115,7 @@ namespace ProgRunnerSvc
         /// <summary>
         /// Overall state of this object
         /// </summary>
-        public eThreadState ThreadState { get; private set; }
+        public ThreadStates ThreadState { get; private set; }
 
         /// <summary>
         /// Exit code when process completes
@@ -161,7 +161,7 @@ namespace ProgRunnerSvc
         private void Initialize(clsProcessSettings processSettings, ProcessWindowStyle windowStyle, bool createNoWindow)
         {
 
-            ThreadState = eThreadState.No;
+            ThreadState = ThreadStates.No;
             KeyName = processSettings.UniqueKey;
 
             // Initially mProgramInfo will only contain the UniqueKey
@@ -187,10 +187,10 @@ namespace ProgRunnerSvc
         {
             try
             {
-                Monitor.Enter(oSync);
+                Monitor.Enter(SyncObject);
                 mNewProgramInfo = newProgramInfo;
                 mUpdateRequired = true;
-                Monitor.Exit(oSync);
+                Monitor.Exit(SyncObject);
             }
             catch (Exception ex)
             {
@@ -203,7 +203,7 @@ namespace ProgRunnerSvc
         /// </summary>
         public void StartThread()
         {
-            if (ThreadState == eThreadState.No)
+            if (ThreadState == ThreadStates.No)
             {
                 try
                 {
@@ -213,7 +213,7 @@ namespace ProgRunnerSvc
                 }
                 catch (Exception ex)
                 {
-                    ThreadState = eThreadState.ProcessBroken;
+                    ThreadState = ThreadStates.ProcessBroken;
                     LogTools.LogError("Failed to create thread: " + KeyName, ex);
                 }
             }
@@ -229,7 +229,7 @@ namespace ProgRunnerSvc
                 return;
 
             mThreadStopCommand = true;
-            if (ThreadState == eThreadState.ProcessRunning)
+            if (ThreadState == ThreadStates.ProcessRunning)
             {
                 LogTools.LogMessage("Try to kill process: " + KeyName);
 
@@ -402,18 +402,18 @@ namespace ProgRunnerSvc
                     // Parameters have changed; update them
                     mUpdateRequired = false;
 
-                    ThreadState = eThreadState.Idle;
+                    ThreadState = ThreadStates.Idle;
                     UpdateThreadParameters(false);
                 }
 
-                if (ThreadState == eThreadState.ProcessStarting)
+                if (ThreadState == ThreadStates.ProcessStarting)
                 {
                     try
                     {
                         if (string.IsNullOrWhiteSpace(mProgramInfo.ProgramPath))
                         {
                             LogTools.LogError("Error running process '" + KeyName + "': empty program path");
-                            ThreadState = eThreadState.ProcessBroken;
+                            ThreadState = ThreadStates.ProcessBroken;
                             return;
                         }
 
@@ -442,7 +442,7 @@ namespace ProgRunnerSvc
                         mInitialDelayApplied = true;
 
                         mProcess.Start();
-                        ThreadState = eThreadState.ProcessRunning;
+                        ThreadState = ThreadStates.ProcessRunning;
                         PID = mProcess.Id;
                         LogTools.LogMessage(string.Format("Started: {0}, pID={1}", KeyName, PID));
 
@@ -476,7 +476,7 @@ namespace ProgRunnerSvc
                     catch (Exception ex)
                     {
                         LogTools.LogError("Error running process '" + KeyName + "'", ex);
-                        ThreadState = eThreadState.ProcessBroken;
+                        ThreadState = ThreadStates.ProcessBroken;
                         return;
                     }
 
@@ -485,12 +485,12 @@ namespace ProgRunnerSvc
                         PID = 0;
                         ExitCode = mProcess.ExitCode;
                         mProcess.Close();
-                        ThreadState = eThreadState.Idle;
+                        ThreadState = ThreadStates.Idle;
 
                         if (StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                         {
                             // Process has exited; but its mode is repeat
-                            // Wait for Holdoff seconds, then set ThreadState to eThreadState.ProcessStarting
+                            // Wait for Holdoff seconds, then set ThreadState to ThreadStates.ProcessStarting
                             var holdoffStartTime = DateTime.UtcNow;
 
                             do
@@ -511,12 +511,12 @@ namespace ProgRunnerSvc
 
                             if (StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                             {
-                                if (ThreadState == eThreadState.Idle)
-                                    ThreadState = eThreadState.ProcessStarting;
+                                if (ThreadState == ThreadStates.Idle)
+                                    ThreadState = ThreadStates.ProcessStarting;
                             }
                             else
                             {
-                                ThreadState = eThreadState.Idle;
+                                ThreadState = ThreadStates.Idle;
                             }
 
                         }
@@ -528,13 +528,13 @@ namespace ProgRunnerSvc
                     }
                     catch (ThreadAbortException)
                     {
-                        ThreadState = eThreadState.ProcessBroken;
+                        ThreadState = ThreadStates.ProcessBroken;
                         return;
                     }
                     catch (Exception ex2)
                     {
                         LogTools.LogError("Error waiting to restart process '" + KeyName + "'", ex2);
-                        ThreadState = eThreadState.ProcessBroken;
+                        ThreadState = ThreadStates.ProcessBroken;
                         return;
                     }
 
@@ -545,7 +545,7 @@ namespace ProgRunnerSvc
                 }
             }
 
-            ThreadState = eThreadState.No;
+            ThreadState = ThreadStates.No;
             LogTools.LogMessage("Thread stopped: " + KeyName);
 
         }
@@ -579,7 +579,7 @@ namespace ProgRunnerSvc
         {
             try
             {
-                Monitor.Enter(oSync);
+                Monitor.Enter(SyncObject);
 
                 if (string.IsNullOrWhiteSpace(mNewProgramInfo.ProgramPath))
                     mNewProgramInfo.ProgramPath = string.Empty;
@@ -603,14 +603,14 @@ namespace ProgRunnerSvc
                 {
                     if (string.IsNullOrWhiteSpace(mNewProgramInfo.ProgramPath))
                     {
-                        ThreadState = eThreadState.ProcessBroken;
+                        ThreadState = ThreadStates.ProcessBroken;
                         LogTools.LogError("Process '" + KeyName + "' failed due to empty program name");
                     }
 
                     var exeFileInfo = new FileInfo(mNewProgramInfo.ProgramPath);
                     if (!exeFileInfo.Exists)
                     {
-                        ThreadState = eThreadState.ProcessBroken;
+                        ThreadState = ThreadStates.ProcessBroken;
                         LogTools.LogError("Process '" + KeyName + "' failed due to missing program file: " + mNewProgramInfo.ProgramPath);
                         LogPathChangeInfo(mNewProgramInfo.ProgramPath, exeFileInfo);
                     }
@@ -638,7 +638,7 @@ namespace ProgRunnerSvc
                     }
                     else
                     {
-                        ThreadState = eThreadState.ProcessBroken;
+                        ThreadState = ThreadStates.ProcessBroken;
                         LogTools.LogError("Process '" + KeyName + "' failed due to incorrect \"run\" value of '" + mNewProgramInfo.RepeatMode + "'; valid values are Repeat, Once, and No");
                     }
                 }
@@ -647,33 +647,33 @@ namespace ProgRunnerSvc
                 {
                     mInitialDelayApplied = false;
                     mWorkDirLogged = false;
-                    if (ThreadState == eThreadState.Idle)
+                    if (ThreadState == ThreadStates.Idle)
                     {
                         if (StringsMatch(mNewProgramInfo.RepeatMode, "Repeat"))
                         {
-                            ThreadState = eThreadState.ProcessStarting;
+                            ThreadState = ThreadStates.ProcessStarting;
                         }
                         else if (StringsMatch(mNewProgramInfo.RepeatMode, "Once"))
                         {
                             if (!string.Equals(mProgramInfo.ProgramPath, mNewProgramInfo.ProgramPath))
                             {
-                                ThreadState = eThreadState.ProcessStarting;
+                                ThreadState = ThreadStates.ProcessStarting;
                             }
                             else if (!string.Equals(mProgramInfo.ProgramArguments, mNewProgramInfo.ProgramArguments))
                             {
-                                ThreadState = eThreadState.ProcessStarting;
+                                ThreadState = ThreadStates.ProcessStarting;
                             }
                             else
                             {
                                 if (StringsMatch(mProgramInfo.RepeatMode, "No") || StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                                 {
-                                    ThreadState = eThreadState.ProcessStarting;
+                                    ThreadState = ThreadStates.ProcessStarting;
                                 }
                                 else
                                 {
                                     if (mProgramInfo.HoldoffSeconds != mNewProgramInfo.HoldoffSeconds)
                                     {
-                                        ThreadState = eThreadState.ProcessStarting;
+                                        ThreadState = ThreadStates.ProcessStarting;
                                     }
                                 }
                             }
@@ -690,7 +690,7 @@ namespace ProgRunnerSvc
                 mProgramInfo.DelaySeconds = mNewProgramInfo.DelaySeconds;
 
                 ExitCode = 0;
-                Monitor.Exit(oSync);
+                Monitor.Exit(SyncObject);
             }
             catch (Exception ex)
             {

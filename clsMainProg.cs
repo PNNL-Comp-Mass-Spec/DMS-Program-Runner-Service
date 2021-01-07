@@ -149,7 +149,7 @@ namespace ProgRunnerSvc
             }
 
             var threadsProcessed = 0;
-            var oRandom = new Random();
+            var random = new Random();
 
             foreach (var settingsEntry in programSettings)
             {
@@ -168,11 +168,11 @@ namespace ProgRunnerSvc
                     if (!mProgRunners.ContainsKey(uniqueProgramKey))
                     {
                         // New entry
-                        var oCProcessRunner = new clsProcessRunner(settingsEntry);
+                        var processRunner = new clsProcessRunner(settingsEntry);
 
                         progRunners.Add(uniqueProgramKey, true);
 
-                        mProgRunners.Add(uniqueProgramKey, oCProcessRunner);
+                        mProgRunners.Add(uniqueProgramKey, processRunner);
                         LogTools.LogMessage(string.Format(
                                                 "Added program '{0}': {1} {2}",
                                                 uniqueProgramKey, settingsEntry.ProgramPath, settingsEntry.ProgramArguments));
@@ -181,7 +181,7 @@ namespace ProgRunnerSvc
                         {
                             // Delay between 1 and 2 seconds before continuing
                             // We do this so that the ProgRunner doesn't start a bunch of processes all at once
-                            var delayTimeSec = 1 + oRandom.NextDouble();
+                            var delayTimeSec = 1 + random.NextDouble();
                             ConsoleMsgUtils.SleepSeconds(delayTimeSec);
                         }
 
@@ -189,8 +189,8 @@ namespace ProgRunnerSvc
                     else
                     {
                         // Updated entry
-                        var oCProcessRunner = mProgRunners[uniqueProgramKey];
-                        oCProcessRunner.UpdateProcessParameters(settingsEntry);
+                        var processRunner = mProgRunners[uniqueProgramKey];
+                        processRunner.UpdateProcessParameters(settingsEntry);
                         progRunners[uniqueProgramKey] = true;
 
                         LogTools.LogMessage("Updated program '" + uniqueProgramKey + "'");
@@ -303,7 +303,7 @@ namespace ProgRunnerSvc
                                         LogTools.LogError("Empty key name; ignoring entry");
                                     }
 
-                                    var oProgramSettings = new clsProcessSettings(keyName)
+                                    var processSettings = new clsProcessSettings(keyName)
                                     {
                                         ProgramPath = GetAttributeSafe(reader, "value"),
                                         ProgramArguments = GetAttributeSafe(reader, "arguments"),
@@ -330,11 +330,11 @@ namespace ProgRunnerSvc
                                         delaySeconds = 0;
                                     }
 
-                                    oProgramSettings.DelaySeconds = delaySeconds;
+                                    processSettings.DelaySeconds = delaySeconds;
 
-                                    oProgramSettings.HoldoffSeconds = holdOffSeconds;
+                                    processSettings.HoldoffSeconds = holdOffSeconds;
 
-                                    programSettings.Add(oProgramSettings);
+                                    programSettings.Add(processSettings);
                                 }
                                 catch (Exception ex)
                                 {
