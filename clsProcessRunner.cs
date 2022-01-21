@@ -15,7 +15,7 @@ namespace ProgRunnerSvc
     /// </summary>
     internal class clsProcessRunner
     {
-        // Ignore Spelling: usr
+        // Ignore Spelling: holdoff, usr
 
         /// <summary>
         /// Thread states
@@ -32,7 +32,7 @@ namespace ProgRunnerSvc
 
         private readonly Regex mMonoProgramMatcher;
 
-        private readonly Process mProcess = new Process();
+        private readonly Process mProcess = new();
 
         private bool mWarnedInvalidRepeatMode;
 
@@ -179,7 +179,7 @@ namespace ProgRunnerSvc
         }
 
         /// <summary>
-        /// Update settings for existing prog runner instance
+        /// Update settings for existing program runner instance
         /// </summary>
         /// <param name="newProgramInfo">New program info</param>
         public void UpdateProcessParameters(clsProcessSettings newProgramInfo)
