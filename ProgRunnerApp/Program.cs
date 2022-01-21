@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Reflection;
+using System.Threading;
 using ProgRunnerSvc;
 using PRISM;
 
@@ -13,48 +13,60 @@ namespace ProgRunnerApp
     {
         // Ignore Spelling: cron
 
-        public const string PROGRAM_DATE = "January 7, 2021";
-
-        private static int mMaxRuntimeMinutes;
+        public const string PROGRAM_DATE = "January 20, 2022";
 
         /// <summary>
         /// The main entry point for the service
         /// </summary>
-        private static int Main()
+        private static int Main(string[] args)
         {
-            mMaxRuntimeMinutes = 0;
+            var exeName = Assembly.GetEntryAssembly()?.GetName().Name;
 
-            // Parse the command line arguments
-            var commandLineParser = new clsParseCommandLine();
-
-            var success = false;
-
-            if (commandLineParser.ParseCommandLine())
+            var parser = new CommandLineParser<ProgRunnerOptions>(exeName, GetAppVersion())
             {
-                if (SetOptionsUsingCommandLineParameters(commandLineParser))
-                    success = true;
+                ProgramInfo = "This program starts an instance of the DMS Program Runner",
+                ContactInfo = "Program written by Matthew Monroe for PNNL (Richland, WA)" + Environment.NewLine +
+                              "E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov" + Environment.NewLine +
+                              "Website: https://github.com/PNNL-Comp-Mass-Spec/ or https://panomics.pnnl.gov/ or https://www.pnnl.gov/integrative-omics"
+            };
+
+            ProgRunnerOptions options;
+
+            if (args.Length == 0)
+            {
+                options = new ProgRunnerOptions();
             }
             else
             {
-                if (commandLineParser.NonSwitchParameterCount + commandLineParser.ParameterCount == 0 && !commandLineParser.NeedToShowHelp)
-                {
-                    // No arguments were provided; that's OK
-                    success = true;
-                }
-            }
+                var result = parser.ParseArgs(args);
+                options = result.ParsedResults;
 
-            if (!success || commandLineParser.NeedToShowHelp)
-            {
-                ShowProgramHelp();
-                return -1;
+                if (!result.Success || !options.Validate())
+                {
+                    if (parser.CreateParamFileProvided)
+                    {
+                        return 0;
+                    }
+
+                    // Delay for 750 msec in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
+                    Thread.Sleep(750);
+
+                    return -1;
+                }
             }
 
             try
             {
-                if (mMaxRuntimeMinutes > 0)
-                    Console.WriteLine("Starting the DMSProgramRunner; will exit after {0} minutes", mMaxRuntimeMinutes);
+                if (options.MaxRuntimeMinutes > 0)
+                {
+                    Console.WriteLine(
+                        "Starting the DMSProgramRunner; will exit after {0} minute{1}",
+                        options.MaxRuntimeMinutes, options.MaxRuntimeMinutes == 1 ? string.Empty : "s");
+                }
                 else
+                {
                     Console.WriteLine("Starting the DMSProgramRunner; will run indefinitely");
+                }
 
                 Console.WriteLine();
 
@@ -69,7 +81,7 @@ namespace ProgRunnerApp
                 // Start the ProgRunner
                 myProgRunner.StartAllProgRunners();
 
-                MonitorProgRunner(myProgRunner);
+                MonitorProgRunner(myProgRunner, options);
                 return 0;
             }
             catch (Exception ex)
@@ -79,7 +91,7 @@ namespace ProgRunnerApp
             }
         }
 
-        private static void MonitorProgRunner(clsMainProg myProgRunner)
+        private static void MonitorProgRunner(clsMainProg myProgRunner, ProgRunnerOptions options)
         {
             try
             {
@@ -88,10 +100,10 @@ namespace ProgRunnerApp
 
                 while (continueLooping)
                 {
-                    // Wait for 60 seconds
-                    ConsoleMsgUtils.SleepSeconds(60);
+                    // Wait for 20 seconds
+                    ConsoleMsgUtils.SleepSeconds(20);
 
-                    if (mMaxRuntimeMinutes > 0 && DateTime.UtcNow.Subtract(startTime).TotalMinutes > mMaxRuntimeMinutes)
+                    if (options.MaxRuntimeMinutes > 0 && DateTime.UtcNow.Subtract(startTime).TotalMinutes > options.MaxRuntimeMinutes)
                         continueLooping = false;
                 }
             }
@@ -113,115 +125,12 @@ namespace ProgRunnerApp
 
         private static string GetAppVersion()
         {
-            return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version + " (" + PROGRAM_DATE + ")";
-        }
-
-        private static bool SetOptionsUsingCommandLineParameters(clsParseCommandLine commandLineParser)
-        {
-            // Returns True if no problems; otherwise, returns false
-            var lstValidParameters = new List<string> { "RunTime" };
-
-            try
-            {
-                // Make sure no invalid parameters are present
-                if (commandLineParser.InvalidParametersPresent(lstValidParameters))
-                {
-                    var badArguments = new List<string>();
-                    foreach (var item in commandLineParser.InvalidParameters(lstValidParameters))
-                    {
-                        badArguments.Add("/" + item);
-                    }
-
-                    ShowErrorMessage("Invalid command line parameters", badArguments);
-
-                    return false;
-                }
-
-                if (commandLineParser.NonSwitchParameterCount > 0)
-                {
-                    var runtimeMinutesText = commandLineParser.RetrieveNonSwitchParameter(0);
-
-                    if (int.TryParse(runtimeMinutesText, out var runtimeMinutes))
-                    {
-                        mMaxRuntimeMinutes = runtimeMinutes;
-                    }
-                }
-
-                return GetParamInt(commandLineParser, "RunTime", ref mMaxRuntimeMinutes);
-            }
-            catch (Exception ex)
-            {
-                ShowErrorMessage("Error parsing the command line parameters: " + Environment.NewLine + ex.Message);
-            }
-
-            return false;
-        }
-
-        private static bool GetParamInt(clsParseCommandLine commandLineParser, string paramName, ref int paramValue)
-        {
-            if (!commandLineParser.RetrieveValueForParameter(paramName, out var paramValueText))
-            {
-                // Leave paramValue unchanged
-                return true;
-            }
-
-            if (string.IsNullOrWhiteSpace(paramValueText))
-            {
-                ShowErrorMessage("/" + paramName + " does not have a value");
-                return false;
-            }
-
-            // Update paramValue
-            if (int.TryParse(paramValueText, out paramValue))
-            {
-                return true;
-            }
-
-            ShowErrorMessage("Error converting " + paramValueText + " to an integer for parameter /" + paramName);
-            return false;
+            return Assembly.GetExecutingAssembly().GetName().Version + " (" + PROGRAM_DATE + ")";
         }
 
         private static void ShowErrorMessage(string message, Exception ex = null)
         {
             ConsoleMsgUtils.ShowError(message, ex);
-        }
-
-        private static void ShowErrorMessage(string title, IEnumerable<string> items)
-        {
-            ConsoleMsgUtils.ShowErrors(title, items);
-        }
-
-        private static void ShowProgramHelp()
-        {
-            var exeName = Path.GetFileName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-
-            try
-            {
-                Console.WriteLine();
-                Console.WriteLine("This program starts an instance of the DMS Program Runner");
-                Console.WriteLine();
-                Console.WriteLine("Program syntax:" + Environment.NewLine + exeName);
-                Console.WriteLine(" [/RunTime:Minutes]");
-                Console.WriteLine();
-                Console.WriteLine(ConsoleMsgUtils.WrapParagraph(
-                                      "By default this program will run indefinitely. " +
-                                      "Optionally use /RunTime to specify a maximum runtime, in minutes"));
-                Console.WriteLine();
-                Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2018");
-                Console.WriteLine("Version: " + GetAppVersion());
-                Console.WriteLine();
-
-                Console.WriteLine("E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov");
-                Console.WriteLine("Website: https://panomics.pnnl.gov/ or https://omics.pnl.gov");
-                Console.WriteLine();
-
-                // Delay for 1 second in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
-                ConsoleMsgUtils.SleepSeconds(1);
-            }
-            catch (Exception ex)
-            {
-                ShowErrorMessage("Error displaying the program syntax", ex);
-            }
         }
     }
 }
