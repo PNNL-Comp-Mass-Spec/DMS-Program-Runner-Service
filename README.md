@@ -74,10 +74,10 @@ In addition, set the "Secondary Logon Service" to start automatically
 
 Written by Dave Clark and Matthew Monroe for the Department of Energy (PNNL, Richland, WA) \
 E-mail: proteomics@pnnl.gov \
-Website: https://panomics.pnl.gov/ or https://omics.pnl.gov
+Website: https://github.com/PNNL-Comp-Mass-Spec/ or https://panomics.pnnl.gov/ or https://www.pnnl.gov/integrative-omics
 
 ## License
 
 The DMS Program Runner is licensed under the Apache License, Version 2.0; 
-you may not use this file except in compliance with the License.  You may obtain 
+you may not use this program except in compliance with the License.  You may obtain 
 a copy of the License at https://opensource.org/licenses/Apache-2.0
