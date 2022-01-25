@@ -1,3 +1,12 @@
+@echo off
+
+echo.
+echo.
+echo About to copy files from \\Proto-2\past\Software\MultiProgRunnerSvc
+echo Be sure to first copy the updated files to that directory
+echo.
+pause
+
 :Protos
 echo Update Protos
 call CopyProgrunnerWork.bat Proto-2
@@ -6,21 +15,21 @@ call CopyProgrunnerWork.bat Proto-4
 call CopyProgrunnerWork.bat Proto-5
 call CopyProgrunnerWork.bat Proto-6
 call CopyProgrunnerWork.bat Proto-7
-rem Offline: Proto-8
-rem Offline: Proto-9
+call CopyProgrunnerWork.bat Proto-8
+call CopyProgrunnerWork.bat Proto-9
 rem Offline: Proto-10
 call CopyProgrunnerWork.bat Proto-11
 
 :Pubs
 echo Update Pub-0*
-call CopyProgrunnerWork.bat Pub-02
-call CopyProgrunnerWork.bat Pub-03
-call CopyProgrunnerWork.bat Pub-04
-call CopyProgrunnerWork.bat Pub-05
-call CopyProgrunnerWork.bat Pub-06
-call CopyProgrunnerWork.bat Pub-07
-call CopyProgrunnerWork.bat Pub-08
-call CopyProgrunnerWork.bat Pub-09
+rem Retired: Pub-02
+rem Retired: Pub-03
+rem Retired: Pub-04
+rem Retired: Pub-05
+rem Retired: Pub-06
+rem Retired: Pub-07
+rem Retired: Pub-08
+rem Retired: Pub-09
 
 echo Update Pub-1*
 call CopyProgrunnerWork.bat Pub-10
@@ -31,26 +40,38 @@ call CopyProgrunnerWork.bat Pub-14
 call CopyProgrunnerWork.bat Pub-15
 call CopyProgrunnerWork.bat Pub-16
 call CopyProgrunnerWork.bat Pub-17
+call CopyProgrunnerWork.bat Pub-18
+call CopyProgrunnerWork.bat Pub-19
 
-
+echo Update Pub-2*
+call CopyProgrunnerWork.bat Pub-20
+call CopyProgrunnerWork.bat Pub-21
+call CopyProgrunnerWork.bat Pub-22
+call CopyProgrunnerWork.bat Pub-23
+call CopyProgrunnerWork.bat Pub-24
+call CopyProgrunnerWork.bat Pub-25
+call CopyProgrunnerWork.bat Pub-26
+call CopyProgrunnerWork.bat Pub-27
+call CopyProgrunnerWork.bat Pub-28
+call CopyProgrunnerWork.bat Pub-29
 
 echo Update Pub-3*
-rem Offline: Pub-30
-rem Offline: Pub-31
+call CopyProgrunnerWork.bat Pub-30
+call CopyProgrunnerWork.bat Pub-31
 call CopyProgrunnerWork.bat Pub-32
-rem Offline: Pub-33
-call CopyProgrunnerWork.bat Pub-34
-call CopyProgrunnerWork.bat Pub-35
+call CopyProgrunnerWork.bat Pub-33
+rem Offline: Pub-34
+rem Offline: Pub-35
 call CopyProgrunnerWork.bat Pub-36
 call CopyProgrunnerWork.bat Pub-37
 call CopyProgrunnerWork.bat Pub-38
 call CopyProgrunnerWork.bat Pub-39
 
 echo Update Pub-4*
-call CopyProgrunnerWork.bat Pub-40
+rem Offline: Pub-40
 rem Offline: Pub-41
-call CopyProgrunnerWork.bat Pub-42
-call CopyProgrunnerWork.bat Pub-43
+rem Offline: Pub-42
+rem Offline: Pub-43
 call CopyProgrunnerWork.bat Pub-44
 call CopyProgrunnerWork.bat Pub-45
 call CopyProgrunnerWork.bat Pub-46
@@ -118,14 +139,17 @@ call CopyProgrunnerWork.bat Pub-97
 
 echo Update Other
 call CopyProgrunnerWork.bat Andesite
+call CopyProgrunnerWork.bat Bornite
+call CopyProgrunnerWork.bat Calcite
 call CopyProgrunnerWork.bat Diorite
+call CopyProgrunnerWork.bat Ferrite
 call CopyProgrunnerWork.bat Gigasax
 call CopyProgrunnerWork.bat Granite
+call CopyProgrunnerWork.bat Hematite
 call CopyProgrunnerWork.bat Mallard
-rem Offline: Peaks1
-rem Offline: Peaks2
 call CopyProgrunnerWork.bat Proteinseqs
 call CopyProgrunnerWork.bat Protoapps
+call CopyProgrunnerWork.bat Thorite
 
 rem Pub-1000
 call CopyProgrunnerWork.bat EmslMQ01

@@ -1,10 +1,10 @@
 # As described at http://prismwiki.pnl.gov/wiki/Remote_Server_Management
 # you must run this from one of these servers (login as user memadmin or svc-dms and start powershell as an Administrator)
-# 130.20.225.2  Gigasax
-# 130.20.225.3	Proteinseqs
-# 130.20.225.10	Pogo
-# 130.20.225.11	Roadrunner
-# 130.20.225.12	Daffy
+# 130.20.225.2      Gigasax
+# 130.20.225.3      Proteinseqs
+# 130.20.225.10     Pogo
+# 130.20.225.11     Roadrunner
+# 130.20.225.12     Daffy
 #
 # Syntax for overriding the defaults
 # .\ParallelExecuteScript.ps1 -MaxThreads 90 -ScriptFile .\StopProgRunner.ps1 -ComputerList .\Computers.txt
@@ -25,17 +25,17 @@ $Computers = Get-Content $ComputerList | ? {$_.trim() -ne "" } | ? {$_.trim().Su
 "Killing existing jobs . . ."
 Get-Job | Remove-Job -Force
 "Done."
- 
+
 $i = 0
 $ExecutionStart = (Get-Date)
 $EffectiveMaxThreads = $MaxThreads
 
 ForEach ($Computer in $Computers) {
 
-	If ([string]::IsNullOrEmpty($Computer))
-		{continue}
+    If ([string]::IsNullOrEmpty($Computer))
+        {continue}
 
-	$RunningThreads = $(Get-Job -state running).count
+    $RunningThreads = $(Get-Job -state running).count
     While ($(Get-Job -state running).count -ge $EffectiveMaxThreads){
         Write-Progress  -Activity "Creating Server List" `
                         -Status "Waiting for threads to close" `
@@ -43,12 +43,12 @@ ForEach ($Computer in $Computers) {
                         -PercentComplete ($i / $Computers.count * 100)
         Start-Sleep -Milliseconds $SleepTimer
 
-		$ElapsedTime = NEW-TIMESPAN –Start $ExecutionStart –End (Get-Date)
+        $ElapsedTime = NEW-TIMESPAN –Start $ExecutionStart –End (Get-Date)
 
-		# Bump up the effective MaxThreads value as more time elapses
-		$EffectiveMaxThreads = $MaxThreads + [math]::floor($ElapsedTime.TotalSeconds / 60)
+        # Bump up the effective MaxThreads value as more time elapses
+        $EffectiveMaxThreads = $MaxThreads + [math]::floor($ElapsedTime.TotalSeconds / 60)
     }
- 
+
     #"Starting job - $Computer"
     $i++
     Start-Job -FilePath $ScriptFile -ArgumentList $Computer -Name $Computer | Out-Null
@@ -58,9 +58,9 @@ ForEach ($Computer in $Computers) {
                 -PercentComplete ($i / $Computers.count * 100)
    
 }
- 
+
 $Complete = Get-date
- 
+
 While ($(Get-Job -State Running).count -gt 0){
     $ComputersStillRunning = ""
     ForEach ($System  in $(Get-Job -state running)){$ComputersStillRunning += ", $($System.name)"}
@@ -72,9 +72,9 @@ While ($(Get-Job -State Running).count -gt 0){
     If ($(New-TimeSpan $Complete $(Get-Date)).totalseconds -ge $MaxWaitAtEnd){"Killing all jobs still running . . .";Get-Job -State Running | Remove-Job -Force}
     Start-Sleep -Milliseconds $SleepTimer
 }
- 
+
 "Reading all jobs"
- 
+
 If ($OutputType -eq "Text"){
     ForEach($Job in Get-Job){
         "$($Job.Name)"
