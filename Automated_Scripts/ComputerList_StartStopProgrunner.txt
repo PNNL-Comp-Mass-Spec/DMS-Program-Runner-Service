@@ -4,16 +4,18 @@ Proto-4
 Proto-5
 Proto-6
 Proto-7
+Proto-8
+Proto-9
 Proto-11
 
-Pub-02
-Pub-03
-Pub-04
-Pub-05
-Pub-06
-Pub-07
-Pub-08
-Pub-09
+# Retired: pub-02
+# Retired: pub-03
+# Retired: pub-04
+# Retired: pub-05
+# Retired: pub-06
+# Retired: pub-07
+# Retired: pub-08
+# Retired: pub-09
 
 Pub-10
 Pub-11
@@ -23,22 +25,35 @@ Pub-14
 Pub-15
 Pub-16
 Pub-17
+Pub-18
+Pub-19
+Pub-20
+Pub-21
+Pub-22
+Pub-23
+Pub-24
+Pub-25
+Pub-26
+Pub-27
+Pub-28
+Pub-29
 
-# Offline: Pub-25
-
+Pub-30
+Pub-31
 Pub-32
-# Offline: Pub-33
-Pub-34
-Pub-35
+Pub-33
+
+# Offline: Pub-34
+# Offline: Pub-35
 Pub-36
 Pub-37
 Pub-38
 Pub-39
 
-Pub-40
+# Offline: Pub-40
 # Offline: Pub-41
-Pub-42
-Pub-43
+# Offline: Pub-42
+# Offline: Pub-43
 Pub-44
 Pub-45
 Pub-46
@@ -54,6 +69,7 @@ Pub-54
 Pub-55
 Pub-56
 Pub-57
+# May need to update manually by logging in, then using: psservice stop progrunner
 Pub-58
 Pub-59
 
@@ -100,15 +116,14 @@ Pub-96
 Pub-97
 
 Andesite
+Bornite
+Calcite.emsl.pnl.gov
 Diorite
+Ferrite
 Gigasax
 Granite
+Hematite
 Mallard
-# Offline: Peaks2
 Proteinseqs
 Protoapps
-
-# Pub-1000
-EmslMQ01
-# Pub-1001
-EmslPub01
+Thorite
