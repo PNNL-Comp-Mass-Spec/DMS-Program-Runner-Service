@@ -1,21 +1,14 @@
 
-1) Login as user memadmin or svc-dms to one of the servers white-listed to allow remote powershell access:
-   See http://prismwiki.pnl.gov/wiki/Remote_Server_Management#Opening_port_5985
+1) Login to Proto-2 or Protoapps as user svc-dms or memadmin
 
-	IP              Server
-	130.20.225.2    Gigasax
-	130.20.225.3    Proteinseqs
-	130.20.225.10   Pogo
-	130.20.225.11   Roadrunner
-	130.20.225.12   Daffy
+2) Customize C:\DMS_Programs\ServicePasswordUpdate\ControlServices\ComputerList_StartStopProgrunner.txt
 
-2) Run Powershell as an Administrator
-
-3) Customize Computers.txt
+3) Run Powershell as an Administrator
 
 4) Stop the ProgRunner Service using Powershell:
 
-.\ParallelExecuteScript.ps1 -MaxThreads 90 -ScriptFile .\StopProgRunner.ps1 -ComputerList .\Computers.txt
+cd C:\DMS_Programs\ServicePasswordUpdate\ControlServices
+.\ParallelExecuteScript.ps1 -MaxThreads 90 -ScriptFile .\StopProgRunner.ps1 -ComputerList .\ComputerList_StartStopProgrunner.txt
 
 5) Rollout the updated .exe using CopyProgrunner_AllMachines.bat
 
@@ -25,4 +18,4 @@ call CopyProgrunnerWork.bat Pub-11
 
 6) Start the Progrunner Service using Powershell:
 
-.\ParallelExecuteScript.ps1 -MaxThreads 90 -ScriptFile .\StartProgRunner.ps1 -ComputerList .\Computers.txt
+.\ParallelExecuteScript.ps1 -MaxThreads 90 -ScriptFile .\StartProgRunner.ps1 -ComputerList .\ComputerList_StartStopProgrunner.txt
