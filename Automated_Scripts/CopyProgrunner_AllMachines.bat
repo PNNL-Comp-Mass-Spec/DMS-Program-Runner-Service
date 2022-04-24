@@ -60,18 +60,18 @@ call CopyProgrunnerWork.bat Pub-30
 call CopyProgrunnerWork.bat Pub-31
 call CopyProgrunnerWork.bat Pub-32
 call CopyProgrunnerWork.bat Pub-33
-rem Offline: Pub-34
-rem Offline: Pub-35
+call CopyProgrunnerWork.bat Pub-34
+call CopyProgrunnerWork.bat Pub-35
 call CopyProgrunnerWork.bat Pub-36
 call CopyProgrunnerWork.bat Pub-37
 call CopyProgrunnerWork.bat Pub-38
 call CopyProgrunnerWork.bat Pub-39
 
 echo Update Pub-4*
-rem Offline: Pub-40
-rem Offline: Pub-41
-rem Offline: Pub-42
-rem Offline: Pub-43
+call CopyProgrunnerWork.bat Pub-40
+call CopyProgrunnerWork.bat Pub-41
+call CopyProgrunnerWork.bat Pub-42
+call CopyProgrunnerWork.bat Pub-43
 call CopyProgrunnerWork.bat Pub-44
 call CopyProgrunnerWork.bat Pub-45
 call CopyProgrunnerWork.bat Pub-46
@@ -132,30 +132,30 @@ call CopyProgrunnerWork.bat Pub-90
 call CopyProgrunnerWork.bat Pub-91
 call CopyProgrunnerWork.bat Pub-92
 call CopyProgrunnerWork.bat Pub-93
-call CopyProgrunnerWork.bat Pub-94
-call CopyProgrunnerWork.bat Pub-95
-call CopyProgrunnerWork.bat Pub-96
-call CopyProgrunnerWork.bat Pub-97
+rem Retired: call CopyProgrunnerWork.bat Pub-94
+rem Retired: call CopyProgrunnerWork.bat Pub-95
+rem Retired: call CopyProgrunnerWork.bat Pub-96
+rem Retired: call CopyProgrunnerWork.bat Pub-97
 
 echo Update Other
-call CopyProgrunnerWork.bat Andesite
-call CopyProgrunnerWork.bat Bornite
-call CopyProgrunnerWork.bat Calcite
+rem Retired: call CopyProgrunnerWork.bat Andesite
+rem Retired: call CopyProgrunnerWork.bat Bornite
+rem Retired: call CopyProgrunnerWork.bat Calcite
 call CopyProgrunnerWork.bat Diorite
-call CopyProgrunnerWork.bat Ferrite
+rem Retired: call CopyProgrunnerWork.bat Ferrite
 call CopyProgrunnerWork.bat Gigasax
-call CopyProgrunnerWork.bat Granite
-call CopyProgrunnerWork.bat Hematite
-call CopyProgrunnerWork.bat Mallard
+rem Retired: call CopyProgrunnerWork.bat Granite
+rem Retired: call CopyProgrunnerWork.bat Hematite
+rem Retired: call CopyProgrunnerWork.bat Mallard
 call CopyProgrunnerWork.bat Proteinseqs
 call CopyProgrunnerWork.bat Protoapps
-call CopyProgrunnerWork.bat Thorite
+rem Retired: call CopyProgrunnerWork.bat Thorite
 
 rem Pub-1000
-call CopyProgrunnerWork.bat EmslMQ01
+rem Retired: call CopyProgrunnerWork.bat EmslMQ01
 rem Pub-1001
-call CopyProgrunnerWork.bat EmslPub01
+rem Retired: call CopyProgrunnerWork.bat EmslPub01
 
-rem Offline: seqcluster1
-rem Offline: seqcluster2
-rem Offline: seqcluster5
+rem Retired: seqcluster1
+rem Retired: seqcluster2
+rem Retired: seqcluster5

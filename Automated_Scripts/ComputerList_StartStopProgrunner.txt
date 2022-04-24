@@ -42,18 +42,17 @@ Pub-30
 Pub-31
 Pub-32
 Pub-33
-
-# Offline: Pub-34
-# Offline: Pub-35
+Pub-34
+Pub-35
 Pub-36
 Pub-37
 Pub-38
 Pub-39
 
-# Offline: Pub-40
-# Offline: Pub-41
-# Offline: Pub-42
-# Offline: Pub-43
+Pub-40
+Pub-41
+Pub-42
+Pub-43
 Pub-44
 Pub-45
 Pub-46
@@ -110,20 +109,20 @@ Pub-90
 Pub-91
 Pub-92
 Pub-93
-Pub-94
-Pub-95
-Pub-96
-Pub-97
+# Retired: Pub-94
+# Retired: Pub-95
+# Retired: Pub-96
+# Retired: Pub-97
 
-Andesite
-Bornite
-Calcite.emsl.pnl.gov
+# Retired: Andesite
+# Retired: Bornite
+# Retired: Calcite.emsl.pnl.gov
 Diorite
-Ferrite
+# Retired: Ferrite
 Gigasax
-Granite
-Hematite
-Mallard
+# Retired: Granite
+# Retired: Hematite
+# Retired: Mallard
 Proteinseqs
 Protoapps
-Thorite
+# Retired: Thorite
