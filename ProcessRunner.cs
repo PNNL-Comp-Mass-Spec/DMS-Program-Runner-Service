@@ -28,7 +28,6 @@ namespace ProgRunnerSvc
             ProcessStarting,
             ProcessRunning,
         }
-        #region "Member Variables"
 
         private readonly Regex mMonoProgramMatcher;
 
@@ -62,10 +61,6 @@ namespace ProgRunnerSvc
         private bool mUpdateRequired;
 
         private bool mWorkDirLogged;
-
-        #endregion
-
-        #region "Properties"
 
         /// <summary>
         /// Key name for this program (unique across all programs registered to run)
@@ -137,8 +132,6 @@ namespace ProgRunnerSvc
         /// Window style to use when CreateNoWindow is False
         /// </summary>
         public ProcessWindowStyle WindowStyle { get; private set; }
-
-        #endregion
 
         /// <summary>
         /// Constructor
@@ -378,6 +371,7 @@ namespace ProgRunnerSvc
             if (!StringsMatch(fileOrDirectoryPath, pathInfo.FullName))
                 LogTools.LogMessage(String.Format("Note that {0} resolves to {1} on this system", fileOrDirectoryPath, pathInfo.FullName));
         }
+
         /// <summary>
         /// Start program as external process and monitor its state.
         /// </summary>
