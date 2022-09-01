@@ -5,7 +5,7 @@ namespace ProgRunnerSvc
 {
     public partial class ProgRunner : ServiceBase
     {
-        private readonly clsMainProg mProgRunner;
+        private readonly MainProg mProgRunner;
         private readonly bool mAbortStart;
 
         public ProgRunner()
@@ -14,7 +14,7 @@ namespace ProgRunnerSvc
 
             try
             {
-                mProgRunner = new clsMainProg();
+                mProgRunner = new MainProg();
                 mAbortStart = mProgRunner.StartupAborted;
             }
             catch (Exception)

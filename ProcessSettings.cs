@@ -1,7 +1,7 @@
 ﻿
 namespace ProgRunnerSvc
 {
-    internal class clsProcessSettings
+    internal class ProcessSettings
     {
         /// <summary>
         /// Delay, in seconds, that the ProgRunner service will wait
@@ -45,7 +45,7 @@ namespace ProgRunnerSvc
         /// <summary>
         /// Constructor
         /// </summary>
-        public clsProcessSettings(string uniqueKey)
+        public ProcessSettings(string uniqueKey)
         {
             UniqueKey = uniqueKey;
         }

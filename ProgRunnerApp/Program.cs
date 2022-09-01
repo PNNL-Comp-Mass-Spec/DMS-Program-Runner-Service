@@ -70,7 +70,7 @@ namespace ProgRunnerApp
 
                 Console.WriteLine();
 
-                var myProgRunner = new clsMainProg();
+                var myProgRunner = new MainProg();
                 if (myProgRunner.StartupAborted)
                 {
                     // An error message has already been logged
@@ -91,7 +91,7 @@ namespace ProgRunnerApp
             }
         }
 
-        private static void MonitorProgRunner(clsMainProg myProgRunner, ProgRunnerOptions options)
+        private static void MonitorProgRunner(MainProg myProgRunner, ProgRunnerOptions options)
         {
             try
             {

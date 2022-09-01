@@ -10,7 +10,7 @@ using PRISM.Logging;
 
 namespace ProgRunnerSvc
 {
-    public class clsMainProg : IDisposable
+    public class MainProg : IDisposable
     {
         // Ignore Spelling: workdir
 
@@ -26,7 +26,7 @@ namespace ProgRunnerSvc
         /// <summary>
         /// Keys are the program name; values are the ProcessRunner object
         /// </summary>
-        private readonly Dictionary<string, clsProcessRunner> mProgRunners;
+        private readonly Dictionary<string, ProcessRunner> mProgRunners;
 
         // When the .XML settings file is changed, mUpdateSettingsFromFile is set to True and mUpdateSettingsRequestTime is set to the current date/time
         // Timer looks for mSettingsFileUpdateTimer being true, and after 1500 milliseconds has elapsed, it calls UpdateSettingsFromFile
@@ -45,7 +45,7 @@ namespace ProgRunnerSvc
         /// <summary>
         /// Constructor
         /// </summary>
-        public clsMainProg()
+        public MainProg()
         {
             try
             {
@@ -99,7 +99,7 @@ namespace ProgRunnerSvc
 
                 mFileWatcher.Changed += FileWatcher_Changed;
 
-                mProgRunners = new Dictionary<string, clsProcessRunner>();
+                mProgRunners = new Dictionary<string, ProcessRunner>();
                 mProgRunners.Clear();
 
                 mUpdateSettingsRequestTime = DateTime.UtcNow;
@@ -109,7 +109,7 @@ namespace ProgRunnerSvc
             }
             catch (Exception ex)
             {
-                LogTools.LogError("Failed to initialize clsMainProg", ex);
+                LogTools.LogError("Failed to initialize MainProg", ex);
             }
         }
 
@@ -120,7 +120,7 @@ namespace ProgRunnerSvc
 
         private void UpdateProgRunnersFromFile(bool passXMLFileParsingExceptionsToCaller)
         {
-            List<clsProcessSettings> programSettings;
+            List<ProcessSettings> programSettings;
 
             try
             {
@@ -165,7 +165,7 @@ namespace ProgRunnerSvc
                     if (!mProgRunners.ContainsKey(uniqueProgramKey))
                     {
                         // New entry
-                        var processRunner = new clsProcessRunner(settingsEntry);
+                        var processRunner = new ProcessRunner(settingsEntry);
 
                         progRunners.Add(uniqueProgramKey, true);
 
@@ -238,9 +238,9 @@ namespace ProgRunnerSvc
             LogTools.LogMessage("MultiProgRunner stopped");
         }
 
-        private List<clsProcessSettings> GetProgRunnerSettings(string xmlFilePath)
+        private List<ProcessSettings> GetProgRunnerSettings(string xmlFilePath)
         {
-            var programSettings = new List<clsProcessSettings>();
+            var programSettings = new List<ProcessSettings>();
 
             var sectionName = string.Empty;
 
@@ -294,7 +294,7 @@ namespace ProgRunnerSvc
                                         LogTools.LogError("Empty key name; ignoring entry");
                                     }
 
-                                    var processSettings = new clsProcessSettings(keyName)
+                                    var processSettings = new ProcessSettings(keyName)
                                     {
                                         ProgramPath = GetAttributeSafe(reader, "value"),
                                         ProgramArguments = GetAttributeSafe(reader, "arguments"),

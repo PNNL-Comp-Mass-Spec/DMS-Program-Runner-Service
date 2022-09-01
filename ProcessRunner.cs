@@ -13,7 +13,7 @@ namespace ProgRunnerSvc
     /// <summary>
     /// This class runs a single program as an external process and monitors it with an internal thread
     /// </summary>
-    internal class clsProcessRunner
+    internal class ProcessRunner
     {
         // Ignore Spelling: holdoff, usr
 
@@ -36,9 +36,9 @@ namespace ProgRunnerSvc
 
         private bool mWarnedInvalidRepeatMode;
 
-        private clsProcessSettings mProgramInfo;
+        private ProcessSettings mProgramInfo;
 
-        private clsProcessSettings mNewProgramInfo;
+        private ProcessSettings mNewProgramInfo;
 
         /// <summary>
         /// The internal thread used to run the monitoring code. That starts and monitors the external program.
@@ -146,7 +146,7 @@ namespace ProgRunnerSvc
         /// <param name="processSettings">Process settings</param>
         /// <param name="windowStyle">Window style (defaults to Normal)</param>
         /// <param name="createNoWindow">True to create no window, false to use a normal window; defaults to false</param>
-        public clsProcessRunner(clsProcessSettings processSettings, ProcessWindowStyle windowStyle = ProcessWindowStyle.Normal, bool createNoWindow = false)
+        public ProcessRunner(ProcessSettings processSettings, ProcessWindowStyle windowStyle = ProcessWindowStyle.Normal, bool createNoWindow = false)
         {
             mMonoProgramMatcher = new Regex("^(mono(.exe)?|[^ ]+/mono(.exe)?)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
             Initialize(processSettings, windowStyle, createNoWindow);
@@ -158,7 +158,7 @@ namespace ProgRunnerSvc
         /// <param name="processSettings"></param>
         /// <param name="windowStyle"></param>
         /// <param name="createNoWindow"></param>
-        private void Initialize(clsProcessSettings processSettings, ProcessWindowStyle windowStyle, bool createNoWindow)
+        private void Initialize(ProcessSettings processSettings, ProcessWindowStyle windowStyle, bool createNoWindow)
         {
             ThreadState = ThreadStates.No;
             KeyName = processSettings.UniqueKey;
@@ -167,7 +167,7 @@ namespace ProgRunnerSvc
             // mNewProgramInfo has all of the program details
             // mProgramInfo will be updated by UpdateThreadParameters in ProcessThread provided mUpdateRequired is true
 
-            mProgramInfo = new clsProcessSettings(processSettings.UniqueKey);
+            mProgramInfo = new ProcessSettings(processSettings.UniqueKey);
 
             mNewProgramInfo = processSettings;
 
@@ -182,7 +182,7 @@ namespace ProgRunnerSvc
         /// Update settings for existing program runner instance
         /// </summary>
         /// <param name="newProgramInfo">New program info</param>
-        public void UpdateProcessParameters(clsProcessSettings newProgramInfo)
+        public void UpdateProcessParameters(ProcessSettings newProgramInfo)
         {
             try
             {
@@ -293,7 +293,7 @@ namespace ProgRunnerSvc
         /// Determine the best working directory path to use
         /// </summary>
         /// <param name="programInfo"></param>
-        private string DetermineWorkDir(clsProcessSettings programInfo)
+        private string DetermineWorkDir(ProcessSettings programInfo)
         {
             try
             {
