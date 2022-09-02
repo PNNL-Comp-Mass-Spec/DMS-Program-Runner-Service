@@ -356,7 +356,7 @@ namespace ProgRunnerSvc
             }
             catch (Exception ex)
             {
-                LogTools.LogWarning(string.Format("Error determining the working directory for {0}: {1}", programInfo.UniqueKey, ex.Message));
+                LogTools.LogWarning("Error determining the working directory for {0}: {1}", programInfo.UniqueKey, ex.Message);
                 return programInfo.WorkDir;
             }
         }
@@ -369,7 +369,7 @@ namespace ProgRunnerSvc
         private void LogPathChangeInfo(string fileOrDirectoryPath, FileSystemInfo pathInfo)
         {
             if (!StringsMatch(fileOrDirectoryPath, pathInfo.FullName))
-                LogTools.LogMessage(String.Format("Note that {0} resolves to {1} on this system", fileOrDirectoryPath, pathInfo.FullName));
+                LogTools.LogMessage("Note that {0} resolves to {1} on this system", fileOrDirectoryPath, pathInfo.FullName);
         }
 
         /// <summary>
@@ -419,9 +419,7 @@ namespace ProgRunnerSvc
 
                         if (mProgramInfo.DelaySeconds > 0 && !mInitialDelayApplied)
                         {
-                            LogTools.LogMessage(string.Format(
-                                                    "Delaying {0} seconds before starting {1}",
-                                                    mProgramInfo.DelaySeconds, mProgramInfo.UniqueKey));
+                            LogTools.LogMessage("Delaying {0} seconds before starting {1}", mProgramInfo.DelaySeconds, mProgramInfo.UniqueKey);
 
                             ConsoleMsgUtils.SleepSeconds(mProgramInfo.DelaySeconds);
                         }
@@ -430,11 +428,11 @@ namespace ProgRunnerSvc
                         mProcess.Start();
                         ThreadState = ThreadStates.ProcessRunning;
                         PID = mProcess.Id;
-                        LogTools.LogMessage(string.Format("Started: {0}, pID={1}", KeyName, PID));
+                        LogTools.LogMessage("Started: {0}, pID={1}", KeyName, PID);
 
                         if (!mWorkDirLogged)
                         {
-                            LogTools.LogMessage(string.Format("Working directory for {0} is {1}", KeyName, mProcess.StartInfo.WorkingDirectory));
+                            LogTools.LogMessage("Working directory for {0} is {1}", KeyName, mProcess.StartInfo.WorkingDirectory);
                             mWorkDirLogged = true;
                         }
 
