@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml;
 using PRISM;
@@ -36,6 +37,9 @@ namespace ProgRunnerSvc
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly System.Timers.Timer mSettingsFileUpdateTimer;
+
+        private readonly SelfUpdater mUpdater;
+        private bool lastUpdateAvailableState = false;
 
         /// <summary>
         /// Startup Aborted is set to True if another instance was detected
@@ -86,6 +90,8 @@ namespace ProgRunnerSvc
                     StartupAborted = true;
                     return;
                 }
+
+                mUpdater = new SelfUpdater();
 
                 // Set up the FileWatcher to detect setup file changes
                 mFileWatcher = new FileSystemWatcher();
@@ -164,6 +170,12 @@ namespace ProgRunnerSvc
                 {
                     if (!mProgRunners.ContainsKey(uniqueProgramKey))
                     {
+                        if (mUpdater.UpdateAvailable)
+                        {
+                            // Update available; don't start new programs
+                            continue;
+                        }
+
                         // New entry
                         var processRunner = new ProcessRunner(settingsEntry);
 
@@ -184,6 +196,7 @@ namespace ProgRunnerSvc
                     {
                         // Updated entry
                         var processRunner = mProgRunners[uniqueProgramKey];
+                        processRunner.SetServiceUpdateRequired(mUpdater.UpdateAvailable);
                         processRunner.UpdateProcessParameters(settingsEntry);
                         progRunners[uniqueProgramKey] = true;
 
@@ -503,6 +516,10 @@ namespace ProgRunnerSvc
         {
             if (disposing)
             {
+                mUpdater?.Dispose();
+                mFileWatcher?.Dispose();
+                mSettingsFileUpdateTimer?.Dispose();
+
                 try
                 {
                     StopAllProgRunners();
@@ -529,6 +546,19 @@ namespace ProgRunnerSvc
                     mUpdateSettingsFromFile = false;
                     UpdateSettingsFromFile();
                 }
+            }
+
+            if (lastUpdateAvailableState != mUpdater.UpdateAvailable)
+            {
+                lastUpdateAvailableState = mUpdater.UpdateAvailable;
+                UpdateProgRunnersFromFile(false);
+            }
+
+            if (mUpdater.UpdateAvailable && !mUpdater.UpdateStarted &&
+                !mProgRunners.Values.Any(x => x.ThreadState is ProcessRunner.ThreadStates.ProcessStarting or ProcessRunner.ThreadStates.ProcessRunning))
+            {
+                LogTools.LogMessage("No processes running: Starting service update.");
+                mUpdater.DoUpdate();
             }
         }
     }

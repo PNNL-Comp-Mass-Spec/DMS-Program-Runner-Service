@@ -60,6 +60,8 @@ namespace ProgRunnerSvc
 
         private bool mUpdateRequired;
 
+        private bool mServiceUpdateRequired;
+
         private bool mWorkDirLogged;
 
         /// <summary>
@@ -188,6 +190,11 @@ namespace ProgRunnerSvc
             {
                 ConsoleMsgUtils.ShowWarning("Error updating process parameters: " + ex.Message);
             }
+        }
+
+        public void SetServiceUpdateRequired(bool updateNeeded)
+        {
+            mServiceUpdateRequired = updateNeeded;
         }
 
         /// <summary>
@@ -392,7 +399,15 @@ namespace ProgRunnerSvc
                     UpdateThreadParameters(false);
                 }
 
-                if (ThreadState == ThreadStates.ProcessStarting)
+                if (mServiceUpdateRequired)
+                {
+                    // Exit the thread; done here because we don't want to kill any processing.
+                    LogTools.LogMessage("Stopped for service update: {0}", KeyName);
+                    break;
+                }
+
+                // Don't start job checks, etc. if there is a service update requirement
+                if (ThreadState == ThreadStates.ProcessStarting && !mServiceUpdateRequired)
                 {
                     try
                     {
@@ -469,6 +484,13 @@ namespace ProgRunnerSvc
                         ExitCode = mProcess.ExitCode;
                         mProcess.Close();
                         ThreadState = ThreadStates.Idle;
+
+                        if (mServiceUpdateRequired)
+                        {
+                            // Exit the thread; done here because we don't want to kill any processing.
+                            LogTools.LogMessage("Stopped for service update: {0}", KeyName);
+                            break;
+                        }
 
                         if (StringsMatch(mProgramInfo.RepeatMode, "Repeat"))
                         {
