@@ -13,7 +13,7 @@ namespace ProgRunnerApp
     {
         // Ignore Spelling: cron
 
-        public const string PROGRAM_DATE = "November 22, 2022";
+        public const string PROGRAM_DATE = "July 20, 2024";
 
         /// <summary>
         /// The main entry point for the service
